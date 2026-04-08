@@ -1,0 +1,93 @@
+.budgets-container {
+  padding: 1rem;
+}
+
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+
+  .page-title {
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    margin: 0;
+  }
+}
+
+.table-card {
+  padding: 0;
+
+  mat-card-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--surface-gray);
+  }
+
+  mat-card-content {
+    padding: 0;
+  }
+}
+
+.budget-table {
+  width: 100%;
+
+  .mat-mdc-header-cell {
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .category-name {
+    font-weight: 500;
+    color: var(--text-dark);
+  }
+
+  .progress-cell {
+    width: 40%;
+    min-width: 200px;
+    padding-right: 2rem;
+  }
+
+  .progress-wrapper {
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      margin-bottom: 4px;
+      color: var(--text-secondary);
+    }
+    
+    // Default Material progress bar uses primary color
+
+    &.warning {
+      .mat-mdc-progress-bar {
+        --mdc-linear-progress-active-indicator-color: var(--status-warning);
+      }
+      .progress-label { color: var(--status-warning); }
+    }
+
+    &.danger {
+      .mat-mdc-progress-bar {
+        --mdc-linear-progress-active-indicator-color: var(--status-error);
+      }
+      .progress-label { color: var(--status-error); font-weight: 600; }
+    }
+  }
+
+  .amount-cell {
+    text-align: right;
+    width: 15%;
+  }
+
+  .spent-amount {
+    font-weight: 500;
+  }
+
+  .actions-cell {
+    width: 60px;
+    text-align: center;
+  }
+}
+
+.delete-action .warn-text {
+  color: var(--status-error);
+}

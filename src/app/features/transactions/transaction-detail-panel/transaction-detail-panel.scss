@@ -1,0 +1,84 @@
+.panel-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  
+  h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 500;
+  }
+}
+
+.panel-content {
+  flex: 1;
+  padding: 24px 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.header-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 16px;
+  
+  .merchant-name {
+    font-size: 1.5rem;
+    font-weight: 500;
+    text-align: center;
+  }
+  
+  .amount {
+    font-size: 2rem;
+    font-weight: bold;
+    
+    &.expense { color: #d32f2f; }
+    &.income { color: #2e7d32; }
+  }
+}
+
+.detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  
+  .label {
+    font-size: 0.8rem;
+    color: #666;
+    text-transform: uppercase;
+  }
+  
+  .value {
+    font-size: 1rem;
+    color: #333;
+  }
+  
+  .status-chip {
+    align-self: flex-start;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+    
+    &.approved { background: #e8f5e9; color: #2e7d32; }
+    &.pending { background: #fff3e0; color: #e65100; }
+    &.manual { background: #e3f2fd; color: #1565c0; }
+  }
+}
+
+.panel-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px;
+}

@@ -1,0 +1,148 @@
+<div class="settings-container">
+  <div class="header-actions">
+    <h2 class="page-title">Settings</h2>
+  </div>
+
+  <mat-card class="settings-card">
+    <mat-tab-group animationDuration="0ms">
+      
+      <!-- Profile Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">person</mat-icon>
+          Profile
+        </ng-template>
+        
+        <div class="tab-content">
+          <div class="profile-header">
+            <div class="avatar-circle">
+              <mat-icon>person</mat-icon>
+            </div>
+            <div class="profile-info">
+              <h3>Alex Morgan</h3>
+              <p>Pro Member</p>
+              <button mat-button color="primary">Change Avatar</button>
+            </div>
+          </div>
+
+          <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="settings-form">
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>First Name</mat-label>
+                <input matInput formControlName="firstName">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Last Name</mat-label>
+                <input matInput formControlName="lastName">
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Email Address</mat-label>
+                <input matInput type="email" formControlName="email">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Phone Number</mat-label>
+                <input matInput type="tel" formControlName="phone">
+              </mat-form-field>
+            </div>
+
+            <div class="form-actions">
+              <button mat-flat-button color="primary" type="submit" [disabled]="!profileForm.valid">
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </mat-tab>
+
+      <!-- Preferences Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">tune</mat-icon>
+          Preferences
+        </ng-template>
+
+        <div class="tab-content">
+          <form [formGroup]="preferencesForm" (ngSubmit)="savePreferences()" class="settings-form">
+            
+            <h4 class="section-title">Regional Settings</h4>
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Currency</mat-label>
+                <mat-select formControlName="currency">
+                  <mat-option value="USD">USD ($)</mat-option>
+                  <mat-option value="EUR">EUR (€)</mat-option>
+                  <mat-option value="GBP">GBP (£)</mat-option>
+                  <mat-option value="JPY">JPY (¥)</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Language</mat-label>
+                <mat-select formControlName="language">
+                  <mat-option value="English">English</mat-option>
+                  <mat-option value="Spanish">Spanish</mat-option>
+                  <mat-option value="French">French</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <mat-divider class="section-divider"></mat-divider>
+
+            <h4 class="section-title">Notifications</h4>
+            <div class="toggle-group">
+              <div class="toggle-item">
+                <div class="toggle-label-text">
+                  <strong>Email Notifications</strong>
+                  <p>Receive updates about your account activity and weekly summaries.</p>
+                </div>
+                <mat-slide-toggle formControlName="emailNotifications" color="primary"></mat-slide-toggle>
+              </div>
+
+              <div class="toggle-item">
+                <div class="toggle-label-text">
+                  <strong>SMS Alerts</strong>
+                  <p>Get text messages for unusual spending or large transactions.</p>
+                </div>
+                <mat-slide-toggle formControlName="smsNotifications" color="primary"></mat-slide-toggle>
+              </div>
+
+              <div class="toggle-item">
+                <div class="toggle-label-text">
+                  <strong>Marketing Emails</strong>
+                  <p>Receive offers, feature updates, and financial tips.</p>
+                </div>
+                <mat-slide-toggle formControlName="marketingEmails" color="primary"></mat-slide-toggle>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button mat-flat-button color="primary" type="submit" [disabled]="!preferencesForm.valid">
+                Save Preferences
+              </button>
+            </div>
+          </form>
+        </div>
+      </mat-tab>
+
+      <!-- Security Tab (Placeholder) -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">security</mat-icon>
+          Security
+        </ng-template>
+        <div class="tab-content empty-state">
+          <mat-icon class="large-icon">lock</mat-icon>
+          <h3>Password & Authentication</h3>
+          <p>Security settings are managed through your centralized IAM provider.</p>
+          <button mat-stroked-button color="primary">Go to Identity Portal</button>
+        </div>
+      </mat-tab>
+
+    </mat-tab-group>
+  </mat-card>
+</div>

@@ -1,0 +1,56 @@
+<div class="panel-container" *ngIf="transaction">
+  <div class="panel-header">
+    <h2>Transaction Details</h2>
+    <button mat-icon-button (click)="onClose()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+  <mat-divider></mat-divider>
+  
+  <div class="panel-content">
+    <div class="header-info">
+      <div class="merchant-name">{{ transaction.merchant }}</div>
+      <div class="amount" [ngClass]="transaction.amount < 0 ? 'expense' : 'income'">
+        {{ transaction.amount | currency }}
+      </div>
+    </div>
+    
+    <div class="detail-row">
+      <span class="label">Date</span>
+      <span class="value">{{ transaction.date | date:'mediumDate' }}</span>
+    </div>
+    
+    <div class="detail-row">
+      <span class="label">Status</span>
+      <span class="status-chip" [ngClass]="transaction.status.toLowerCase()">{{ transaction.status }}</span>
+    </div>
+    
+    <div class="detail-row">
+      <span class="label">Account</span>
+      <span class="value">{{ transaction.account }}</span>
+    </div>
+    
+    <div class="detail-row">
+      <span class="label">Category</span>
+      <span class="value">{{ transaction.category }}</span>
+    </div>
+
+    <div class="detail-row" *ngIf="transaction.tags && transaction.tags.length > 0">
+      <span class="label">Tags</span>
+      <mat-chip-set>
+        <mat-chip *ngFor="let tag of transaction.tags">{{tag}}</mat-chip>
+      </mat-chip-set>
+    </div>
+
+    <div class="detail-row" *ngIf="transaction.notes">
+      <span class="label">Notes</span>
+      <span class="value">{{ transaction.notes }}</span>
+    </div>
+  </div>
+  
+  <mat-divider></mat-divider>
+  <div class="panel-actions">
+    <button mat-stroked-button color="primary">Edit Category</button>
+    <button mat-stroked-button *ngIf="transaction.status === 'Pending'">Approve</button>
+  </div>
+</div>

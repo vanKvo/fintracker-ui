@@ -1,0 +1,99 @@
+.dashboard-container {
+  padding: 1rem;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+  color: var(--text-dark);
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.summary-card {
+  .card-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    color: white;
+
+    &.primary-blue { background-color: var(--primary-blue); }
+    &.status-success { background-color: var(--status-success); }
+    &.status-error { background-color: var(--status-error); }
+    &.status-info { background-color: var(--status-info); }
+  }
+
+  mat-card-title {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0;
+  }
+
+  .amount {
+    font-size: 1.75rem;
+    font-weight: bold;
+    color: var(--text-dark);
+    margin-top: 0.5rem;
+  }
+
+  .trend {
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    &.positive { color: var(--status-success); }
+    &.negative { color: var(--status-error); }
+  }
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  
+  @media (min-width: 992px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.chart-card, .transactions-card {
+  mat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+}
+
+.chart-container {
+  position: relative;
+  min-height: 250px;
+  height: 300px;
+}
+
+.transactions-table {
+  width: 100%;
+  box-shadow: none;
+
+  .category-chip {
+    background-color: var(--surface-gray);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+  }
+
+  .expense-amount {
+    color: var(--text-dark);
+  }
+
+  .income-amount {
+    color: var(--status-success);
+    font-weight: 500;
+  }
+}

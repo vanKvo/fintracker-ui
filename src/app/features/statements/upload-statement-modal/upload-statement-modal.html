@@ -1,0 +1,25 @@
+<h2 mat-dialog-title>Upload Statement</h2>
+<mat-dialog-content>
+  <div class="upload-form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Select Account</mat-label>
+      <mat-select [ngModel]="selectedAccount()" (ngModelChange)="selectedAccount.set($event)">
+        @for (acc of accounts; track acc) {
+          <mat-option [value]="acc">{{ acc }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <div class="file-upload-container">
+      <input type="file" id="statementFile" (change)="onFileSelected($event)" accept=".pdf,.csv" class="file-input">
+      <label for="statementFile" class="file-label">
+        <mat-icon>cloud_upload</mat-icon>
+        <span>{{ selectedFile() ? selectedFile()?.name : 'Choose a file or drop it here (.pdf, .csv)' }}</span>
+      </label>
+    </div>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary" [disabled]="!selectedAccount() || !selectedFile()" (click)="upload()">Upload</button>
+</mat-dialog-actions>

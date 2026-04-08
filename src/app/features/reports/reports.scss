@@ -1,0 +1,77 @@
+.reports-container {
+  padding: 1rem;
+}
+
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+
+  .page-title {
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    margin: 0;
+  }
+
+  .time-range-select {
+    width: 200px;
+    
+    // Custom Material input styling overrides
+    ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+  }
+}
+
+.reports-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  
+  @media (min-width: 992px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.report-card {
+  mat-card-header {
+    margin-bottom: 1rem;
+  }
+}
+
+.chart-content {
+  position: relative;
+  min-height: 300px;
+}
+
+.summary-stats-card {
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem 0;
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      
+      .stat-label {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+      }
+      
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: var(--text-dark);
+        
+        &.income-text { color: var(--status-success); }
+        &.expense-text { color: var(--text-dark); }
+        &.savings-text { color: var(--primary-blue); }
+      }
+    }
+  }
+}

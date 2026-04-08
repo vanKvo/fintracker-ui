@@ -1,0 +1,71 @@
+<div class="reports-container">
+  <div class="header-actions">
+    <h2 class="page-title">Financial Reports</h2>
+    
+    <mat-form-field appearance="outline" class="time-range-select">
+      <mat-label>Time Range</mat-label>
+      <mat-select [(value)]="selectedTimeRange">
+        @for (range of timeRanges; track range.value) {
+          <mat-option [value]="range.value">{{range.viewValue}}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <div class="reports-grid">
+    <!-- Spending by Category (Pie Chart) -->
+    <mat-card class="report-card">
+      <mat-card-header>
+        <mat-card-title>Spending by Category</mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="chart-content">
+        <canvas baseChart
+          [data]="categoryChartData"
+          [options]="categoryChartOptions"
+          [type]="'pie'">
+        </canvas>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Income vs Expenses Trend (Line Chart) -->
+    <mat-card class="report-card">
+      <mat-card-header>
+        <mat-card-title>Cashflow Trend</mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="chart-content">
+        <canvas baseChart
+          [data]="trendChartData"
+          [options]="trendChartOptions"
+          [type]="'line'">
+        </canvas>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Summary Stats Area for future implementation -->
+  <mat-card class="summary-stats-card">
+    <mat-card-header>
+      <mat-card-title>Period Summary</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-label">Total Income</div>
+          <div class="stat-value income-text">$8,450.00</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Total Expenses</div>
+          <div class="stat-value expense-text">$3,240.50</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Net Savings</div>
+          <div class="stat-value savings-text">$5,209.50</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Savings Rate</div>
+          <div class="stat-value">61.6%</div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

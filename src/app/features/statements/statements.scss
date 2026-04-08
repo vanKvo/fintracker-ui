@@ -1,0 +1,72 @@
+.statements-container {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+
+    h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 500;
+    }
+  }
+}
+
+.statements-table {
+  width: 100%;
+
+  .has-pending {
+    color: #e65100;
+    font-weight: 500;
+    background: #fff3e0;
+    padding: 2px 8px;
+    border-radius: 12px;
+  }
+
+  .status-chip {
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+
+    &.completed {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    &.processing {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    &.needs-attention {
+      background: #fff3e0;
+      color: #e65100;
+    }
+
+    &.failed {
+      background: #ffebee;
+      color: #c62828;
+    }
+  }
+
+  th.mat-column-actions, td.mat-column-actions {
+    width: 60px;
+    text-align: center;
+  }
+}
+
+.warn-text {
+  color: #f44336;
+}

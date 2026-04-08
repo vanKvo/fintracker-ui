@@ -1,0 +1,173 @@
+.transactions-drawer-container {
+  height: calc(100vh - 64px); /* assuming normal layout header height */
+  background: transparent;
+}
+
+.transactions-container {
+  padding: 24px;
+}
+
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+
+  .page-title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 500;
+  }
+  
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+}
+
+.total-amount-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  
+  .label {
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  .value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    
+    &.expense { color: #d32f2f; }
+    &.income { color: #2e7d32; }
+  }
+}
+
+.table-card {
+  padding: 0;
+
+  mat-card-header {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px 24px 0;
+  }
+}
+
+.top-toolbar {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  width: 100%;
+  
+  mat-form-field {
+    flex: 1;
+    min-width: 180px;
+  }
+}
+
+.transaction-tabs {
+  margin-top: 8px;
+  width: 100%;
+}
+
+.bulk-actions {
+  padding: 8px 16px;
+  background: #e3f2fd;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  .selected-text {
+    font-weight: 500;
+    color: #1565c0;
+    margin-right: auto;
+  }
+}
+
+table {
+  width: 100%;
+}
+
+.transaction-row {
+  cursor: pointer;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: #f5f5f5;
+  }
+  
+  &.pending-row {
+    background-color: #fff8e1;
+    
+    &:hover {
+      background-color: #ffecb3;
+    }
+  }
+}
+
+.category-chip {
+  background-color: #eee;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.status-indicator {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  
+  &.approved {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+  &.pending {
+    background: #fff3e0;
+    color: #e65100;
+  }
+  &.manual {
+    background: #e3f2fd;
+    color: #1565c0;
+  }
+}
+
+.amount-cell {
+  font-weight: 500;
+  text-align: right;
+  
+  &.income {
+    color: #2e7d32;
+  }
+  &.expense {
+    color: #333;
+  }
+}
+
+th.mat-column-amount, td.mat-column-amount {
+  text-align: right;
+  padding-right: 24px;
+}
+
+th.mat-column-select, td.mat-column-select {
+  width: 50px;
+}
+
+th.mat-column-actions, td.mat-column-actions {
+  width: 60px;
+  text-align: center;
+}
+
+.empty-cell {
+  text-align: center;
+  padding: 48px;
+  color: #666;
+}

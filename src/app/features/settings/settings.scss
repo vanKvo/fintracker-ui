@@ -1,0 +1,163 @@
+.settings-container {
+  padding: 1rem;
+}
+
+.header-actions {
+  margin-bottom: 2rem;
+
+  .page-title {
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    margin: 0;
+  }
+}
+
+.settings-card {
+  padding: 0;
+
+  // Customizing mat-tab-group
+  ::ng-deep {
+    .mat-mdc-tab-header {
+      border-bottom: 1px solid var(--surface-gray);
+    }
+    
+    .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
+      color: var(--primary-blue);
+    }
+  }
+}
+
+.tab-icon {
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.tab-content {
+  padding: 2rem;
+  max-width: 800px;
+
+  &.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-secondary);
+
+    .large-icon {
+      font-size: 3rem;
+      width: 3rem;
+      height: 3rem;
+      margin-bottom: 1rem;
+    }
+    
+    h3 {
+      color: var(--text-dark);
+      margin-bottom: 0.5rem;
+    }
+    
+    p {
+      margin-bottom: 2rem;
+    }
+  }
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+
+  .avatar-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: var(--secondary-light-blue);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    mat-icon {
+      font-size: 40px;
+      width: 40px;
+      height: 40px;
+    }
+  }
+
+  .profile-info {
+    h3 {
+      font-size: 1.25rem;
+      margin: 0 0 0.25rem 0;
+      color: var(--text-dark);
+    }
+    
+    p {
+      margin: 0 0 0.5rem 0;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+  }
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  .form-row {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+
+    mat-form-field {
+      flex: 1;
+      min-width: 250px;
+    }
+  }
+
+  .section-title {
+    font-size: 1.125rem;
+    color: var(--text-dark);
+    margin: 1.5rem 0 0.5rem 0;
+  }
+
+  .section-divider {
+    margin: 1rem 0;
+  }
+
+  .toggle-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+
+    .toggle-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      
+      .toggle-label-text {
+        padding-right: 2rem;
+        
+        strong {
+          display: block;
+          color: var(--text-dark);
+          margin-bottom: 0.25rem;
+        }
+        
+        p {
+          color: var(--text-secondary);
+          font-size: 0.875rem;
+          margin: 0;
+        }
+      }
+    }
+  }
+
+  .form-actions {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+  }
+}

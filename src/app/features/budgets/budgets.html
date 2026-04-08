@@ -1,0 +1,84 @@
+<div class="budgets-container">
+  <div class="header-actions">
+    <h2 class="page-title">Budgets</h2>
+    <button mat-flat-button color="primary">
+      <mat-icon>add</mat-icon> Create Budget
+    </button>
+  </div>
+
+  <mat-card class="table-card">
+    <mat-card-header>
+      <mat-card-title>Monthly Budget Tracking</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <table mat-table [dataSource]="dataSource" class="mat-elevation-z0 budget-table">
+        
+        <!-- Category Column -->
+        <ng-container matColumnDef="category">
+          <th mat-header-cell *matHeaderCellDef> Category </th>
+          <td mat-cell *matCellDef="let element"> 
+            <span class="category-name">{{element.category}}</span> 
+          </td>
+        </ng-container>
+
+        <!-- Progress Bar Column -->
+        <ng-container matColumnDef="progress">
+          <th mat-header-cell *matHeaderCellDef> Usage </th>
+          <td mat-cell *matCellDef="let element" class="progress-cell"> 
+            <div class="progress-wrapper" 
+                 [class.warning]="isWarning(element.spent, element.allocated)"
+                 [class.danger]="isDanger(element.spent, element.allocated)">
+              <div class="progress-label">
+                <span>{{getPercent(element.spent, element.allocated) | number:'1.0-0'}}%</span>
+              </div>
+              <mat-progress-bar mode="determinate" 
+                [value]="getPercent(element.spent, element.allocated)"
+                [color]="isDanger(element.spent, element.allocated) ? 'warn' : 'primary'">
+              </mat-progress-bar>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Spent Column -->
+        <ng-container matColumnDef="spent">
+          <th mat-header-cell *matHeaderCellDef> Spent </th>
+          <td mat-cell *matCellDef="let element" class="amount-cell spent-amount">
+            {{element.spent | currency}}
+          </td>
+        </ng-container>
+
+        <!-- Allocated Column -->
+        <ng-container matColumnDef="allocated">
+          <th mat-header-cell *matHeaderCellDef> Budgeted </th>
+          <td mat-cell *matCellDef="let element" class="amount-cell">
+            {{element.allocated | currency}}
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let element" class="actions-cell">
+            <button mat-icon-button [matMenuTriggerFor]="menu">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #menu="matMenu">
+              <button mat-menu-item>
+                <mat-icon>edit</mat-icon>
+                <span>Edit Budget</span>
+              </button>
+              <button mat-menu-item class="delete-action">
+                <mat-icon color="warn">delete</mat-icon>
+                <span class="warn-text">Delete</span>
+              </button>
+            </mat-menu>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </mat-card-content>
+  </mat-card>
+</div>
