@@ -1,15 +1,19 @@
 <div class="reports-container">
   <div class="header-actions">
     <h2 class="page-title">Financial Reports</h2>
-    
-    <mat-form-field appearance="outline" class="time-range-select">
-      <mat-label>Time Range</mat-label>
-      <mat-select [(value)]="selectedTimeRange">
-        @for (range of timeRanges; track range.value) {
-          <mat-option [value]="range.value">{{range.viewValue}}</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
+    <div class="action-controls" style="display: flex; gap: 8px; align-items: center;">
+      <mat-form-field appearance="outline" class="time-range-select" style="margin-bottom: -1.25em;">
+        <mat-label>Time Range</mat-label>
+        <mat-select [(value)]="selectedTimeRange">
+          @for (range of timeRanges; track range.value) {
+            <mat-option [value]="range.value">{{range.viewValue}}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      
+      <button mat-stroked-button color="primary">Export CSV</button>
+      <button mat-stroked-button color="primary">Export PDF</button>
+    </div>
   </div>
 
   <div class="reports-grid">

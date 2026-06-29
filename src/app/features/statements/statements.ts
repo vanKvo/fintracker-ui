@@ -1,5 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { StatementService } from '../../core/services/statement.service';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -30,24 +32,38 @@ interface Statement {
     MatSelectModule,
     MatMenuModule,
     MatDialogModule,
-    MatFormFieldModule
+    MatFormFieldModule,
+    MatSnackBarModule
   ],
   templateUrl: './statements.html',
   styleUrl: './statements.scss'
 })
-export class Statements {
+export class Statements implements OnInit {
   private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
+  private statementService = inject(StatementService);
 
-  accounts = ['All Accounts', 'Chase Checking', 'Amex Platinum', 'Citi Double Cash'];
+  accounts = ['All Accounts'];
   selectedAccount = signal('All Accounts');
 
-  statements = signal<Statement[]>([
-    { id: '1', period: 'Mar 2026', account: 'Chase Checking', transactions: 134, pending: 3, approved: 131, status: 'Completed' },
-    { id: '2', period: 'Feb 2026', account: 'Chase Checking', transactions: 128, pending: 0, approved: 128, status: 'Completed' },
-    { id: '3', period: 'Jan 2026', account: 'Chase Checking', transactions: 121, pending: 0, approved: 121, status: 'Completed' },
-  ]);
+  statements = signal<Statement[]>([]);
 
   displayedColumns: string[] = ['period', 'account', 'transactions', 'pending', 'approved', 'status', 'actions'];
+
+  ngOnInit() {
+    this.fetchStatements();
+  }
+
+  fetchStatements() {
+    this.statementService.getStatements().subscribe({
+      next: (data) => {
+        this.statements.set(data);
+        const uniqueAccounts = [...new Set(data.map(s => s.account))];
+        this.accounts = ['All Accounts', ...uniqueAccounts];
+      },
+      error: () => this.snackBar.open('Failed to load statements.', 'Dismiss', { duration: 5000 })
+    });
+  }
 
   openUploadModal() {
     const dialogRef = this.dialog.open(UploadStatementModal, {

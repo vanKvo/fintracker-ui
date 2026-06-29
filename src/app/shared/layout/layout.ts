@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
@@ -7,8 +7,11 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
+import { MatDialogModule } from '@angular/material/dialog';
 import { RouterOutlet, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../core/services/auth.service';
+import { IdleTimerService } from '../../core/services/idle-timer.service';
 
 @Component({
   selector: 'app-layout',
@@ -19,18 +22,31 @@ import { CommonModule } from '@angular/common';
     MatButtonModule,
     MatIconModule,
     MatListModule,
+    MatDialogModule,
     RouterOutlet,
-    RouterModule
+    RouterModule,
   ],
   templateUrl: './layout.html',
   styleUrl: './layout.scss',
 })
-export class Layout {
-  private breakpointObserver = inject(BreakpointObserver);
+export class Layout implements OnInit, OnDestroy {
+  private readonly breakpointObserver = inject(BreakpointObserver);
+  private readonly authService = inject(AuthService);
+  private readonly idleTimer = inject(IdleTimerService);
 
-  isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
-    .pipe(
-      map(result => result.matches),
-      shareReplay()
-    );
+  isHandset$: Observable<boolean> = this.breakpointObserver
+    .observe(Breakpoints.Handset)
+    .pipe(map((result) => result.matches), shareReplay());
+
+  ngOnInit(): void {
+    this.idleTimer.start();
+  }
+
+  ngOnDestroy(): void {
+    this.idleTimer.stop();
+  }
+
+  logout(): void {
+    this.authService.signOut();
+  }
 }

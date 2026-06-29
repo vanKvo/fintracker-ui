@@ -1,0 +1,20 @@
+<div class="auth-container mat-app-background">
+  <mat-card class="auth-card">
+    <mat-card-header>
+      <mat-card-title>Create an Account</mat-card-title>
+      <mat-card-subtitle>Join FinTracker and take control of your finances</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content class="auth-form">
+      <button mat-flat-button color="primary" class="full-width" (click)="createAccount()">
+        Create account
+      </button>
+    </mat-card-content>
+
+    <mat-card-footer>
+      <div class="footer-links">
+        <span>Already have an account? <a routerLink="/auth/login">Sign in</a></span>
+      </div>
+    </mat-card-footer>
+  </mat-card>
+</div>

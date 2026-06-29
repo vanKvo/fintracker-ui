@@ -23,6 +23,34 @@
   </div>
 
   <div class="dashboard-grid">
+    <!-- Spending by Category (Pie Chart) -->
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>Spending by Category</mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="chart-container">
+        <canvas baseChart
+          [data]="categoryChartData"
+          [options]="categoryChartOptions"
+          [type]="'pie'">
+        </canvas>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Spending Trend (Line Chart) -->
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>Spending Trend</mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="chart-container">
+        <canvas baseChart
+          [data]="trendChartData"
+          [options]="trendChartOptions"
+          [type]="'line'">
+        </canvas>
+      </mat-card-content>
+    </mat-card>
+
     <!-- Chart Area -->
     <mat-card class="chart-card">
       <mat-card-header>

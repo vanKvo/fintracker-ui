@@ -1,0 +1,14 @@
+<h2 mat-dialog-title>Session expiring soon</h2>
+
+<mat-dialog-content>
+  <p>
+    You have been inactive for a while. For your security, you will be
+    signed out in <strong>{{ remaining }}</strong> second{{ remaining !== 1 ? 's' : '' }}.
+  </p>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-flat-button color="primary" (click)="staySignedIn()">
+    Stay signed in
+  </button>
+</mat-dialog-actions>

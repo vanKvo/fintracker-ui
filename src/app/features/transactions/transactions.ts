@@ -15,8 +15,12 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { SelectionModel } from '@angular/cdk/collections';
 import { TransactionDetailPanel } from './transaction-detail-panel/transaction-detail-panel';
+import { TransactionService } from '../../core/services/transaction.service';
+import { catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 export interface Transaction {
   id: string;
@@ -28,17 +32,9 @@ export interface Transaction {
   status: 'Pending' | 'Approved' | 'Manual';
   tags?: string[];
   notes?: string;
+  description?: string;
   sourceStatementId?: string;
 }
-
-const ELEMENT_DATA: Transaction[] = [
-  { id: '1', date: '2026-03-10', merchant: 'Starbucks', category: '-', account: 'Chase Checking', amount: -5.00, status: 'Pending', notes: 'Coffee' },
-  { id: '2', date: '2026-03-10', merchant: 'ATM Cash', category: '-', account: 'Chase Checking', amount: -20.00, status: 'Pending' },
-  { id: '3', date: '2026-03-09', merchant: 'Amazon', category: 'Shopping', account: 'Chase Checking', amount: -42.00, status: 'Approved' },
-  { id: '4', date: '2026-03-08', merchant: 'Whole Foods', category: 'Groceries', account: 'Chase Checking', amount: -65.00, status: 'Approved' },
-  { id: '5', date: '2026-03-08', merchant: 'Uber', category: 'Transport', account: 'Chase Checking', amount: -19.00, status: 'Manual' },
-  { id: '6', date: '2026-03-01', merchant: 'TechCorp Salary', category: 'Income', account: 'Chase Checking', amount: 4225.00, status: 'Approved' }
-];
 
 @Component({
   selector: 'app-transactions',
@@ -60,6 +56,7 @@ const ELEMENT_DATA: Transaction[] = [
     MatDatepickerModule,
     MatNativeDateModule,
     MatSidenavModule,
+    MatSnackBarModule,
     TransactionDetailPanel
   ],
   templateUrl: './transactions.html',
@@ -67,11 +64,11 @@ const ELEMENT_DATA: Transaction[] = [
 })
 export class Transactions implements AfterViewInit {
   displayedColumns: string[] = ['select', 'date', 'merchant', 'account', 'category', 'amount', 'status', 'actions'];
-  dataSource = new MatTableDataSource<Transaction>(ELEMENT_DATA);
+  dataSource = new MatTableDataSource<Transaction>([]);
   selection = new SelectionModel<Transaction>(true, []);
   
-  categories = [...new Set(ELEMENT_DATA.map(t => t.category))].filter(c => c !== '-');
-  accounts = [...new Set(ELEMENT_DATA.map(t => t.account))];
+  categories: string[] = [];
+  accounts: string[] = [];
 
   selectedCategory = 'All';
   selectedAccount = 'All';
@@ -82,6 +79,20 @@ export class Transactions implements AfterViewInit {
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
+
+  constructor(private transactionService: TransactionService, private snackBar: MatSnackBar) {
+    this.transactionService.getTransactions().pipe(
+      catchError(error => {
+        this.snackBar.open('Failed to load transactions. Verify ledger-service is running.', 'Dismiss', { duration: 5000 });
+        return of([]);
+      })
+    ).subscribe(data => {
+      this.dataSource.data = data;
+      this.categories = [...new Set(data.map(t => t.category))].filter(c => c !== '-');
+      this.accounts = [...new Set(data.map(t => t.account))];
+      this.applyFilter();
+    });
+  }
 
   ngAfterViewInit() {
     this.dataSource.paginator = this.paginator;

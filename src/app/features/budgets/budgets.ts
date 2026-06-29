@@ -6,21 +6,15 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+import { BudgetService } from '../../core/services/budget.service';
+import { HttpClientModule } from '@angular/common/http';
+import { OnInit } from '@angular/core';
 
 export interface Budget {
   category: string;
   spent: number;
   allocated: number;
 }
-
-const BUDGET_DATA: Budget[] = [
-  { category: 'Groceries', spent: 420.50, allocated: 600 },
-  { category: 'Entertainment', spent: 150.00, allocated: 200 },
-  { category: 'Shopping', spent: 345.00, allocated: 300 }, // Over budget
-  { category: 'Utilities', spent: 180.00, allocated: 250 },
-  { category: 'Transport', spent: 110.00, allocated: 150 },
-  { category: 'Health & Fitness', spent: 65.00, allocated: 100 }
-];
 
 @Component({
   selector: 'app-budgets',
@@ -36,9 +30,17 @@ const BUDGET_DATA: Budget[] = [
   templateUrl: './budgets.html',
   styleUrl: './budgets.scss',
 })
-export class Budgets {
-  displayedColumns: string[] = ['category', 'progress', 'spent', 'allocated', 'actions'];
-  dataSource = BUDGET_DATA;
+export class Budgets implements OnInit {
+  displayedColumns: string[] = ['category', 'progress', 'spent', 'allocated', 'remaining', 'actions'];
+  dataSource: Budget[] = [];
+
+  constructor(private budgetService: BudgetService) {}
+
+  ngOnInit() {
+    this.budgetService.getBudgets().subscribe(data => {
+      this.dataSource = data;
+    });
+  }
 
   getPercent(spent: number, allocated: number): number {
     return Math.min((spent / allocated) * 100, 100);

@@ -56,6 +56,14 @@
           </td>
         </ng-container>
 
+        <!-- Remaining Column -->
+        <ng-container matColumnDef="remaining">
+          <th mat-header-cell *matHeaderCellDef> Remaining </th>
+          <td mat-cell *matCellDef="let element" class="amount-cell remaining-amount">
+            {{(element.allocated - element.spent) | currency}}
+          </td>
+        </ng-container>
+
         <!-- Actions Column -->
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef></th>
