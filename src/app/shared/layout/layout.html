@@ -3,7 +3,17 @@
       [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
       [mode]="(isHandset$ | async) ? 'over' : 'side'"
       [opened]="(isHandset$ | async) === false">
-    <mat-toolbar>FinTracker</mat-toolbar>
+    <mat-toolbar>
+      <div class="header-brand">
+      <svg class="brand-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2C7.5 4.5 4.5 8 4.5 12.5c0 5 7.5 9.5 7.5 9.5s7.5-4.5 7.5-9.5c0-4.5-3-8-7.5-10.5z" stroke-linejoin="round"/>
+        <path d="M12 21V10" stroke-width="2.2" />
+        <path d="M12 14.5c2-0.8 3.5-2.5 3.5-4" stroke-width="2" />
+        <path d="M12 17.5c-2-0.8-3.5-2.5-3.5-4" stroke-width="2" />
+      </svg>
+      <span class="brand-name">FinTracker</span>
+    </div>
+    </mat-toolbar>
     <mat-nav-list>
       <a mat-list-item routerLink="/dashboard" routerLinkActive="active-link">
         <mat-icon matListItemIcon>dashboard</mat-icon>

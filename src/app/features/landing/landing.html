@@ -1,0 +1,211 @@
+<div class="landing-container">
+  <!-- Navbar -->
+  <header class="header">
+    <div class="header-brand">
+      <svg class="brand-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2C7.5 4.5 4.5 8 4.5 12.5c0 5 7.5 9.5 7.5 9.5s7.5-4.5 7.5-9.5c0-4.5-3-8-7.5-10.5z" stroke-linejoin="round"/>
+        <path d="M12 21V10" stroke-width="2.2" />
+        <path d="M12 14.5c2-0.8 3.5-2.5 3.5-4" stroke-width="2" />
+        <path d="M12 17.5c-2-0.8-3.5-2.5-3.5-4" stroke-width="2" />
+      </svg>
+      <span class="brand-name">FinTracker</span>
+    </div>
+    <nav class="header-nav">
+      @if (isAuthenticated()) {
+        <a routerLink="/dashboard" class="btn btn-primary btn-sm">Go to Dashboard</a>
+      } @else {
+        <a routerLink="/auth/login" class="nav-link">Log in</a>
+        <a routerLink="/auth/register" class="btn btn-primary btn-sm">Sign up</a>
+      }
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-badge">Minimal & Modern Finance</div>
+    <h1 class="hero-title">Financial tracking,<br>designed for clarity.</h1>
+    <p class="hero-subtitle">
+      A sleek dashboard to organize your transactions, monitor monthly budgets, and obtain deep insights into your spending patterns without the complexity.
+    </p>
+    <div class="hero-actions">
+      @if (isAuthenticated()) {
+        <a routerLink="/dashboard" class="btn btn-primary">Go to Dashboard</a>
+      } @else {
+        <a routerLink="/auth/register" class="btn btn-primary">Get Started</a>
+      }
+      <a href="#pricing" (click)="scrollToPricing($event)" class="btn btn-secondary">View Pricing</a>
+    </div>
+  </section>
+
+  <!-- Use Cases / Features -->
+  <section class="features-section">
+    <div class="section-header">
+      <h2 class="section-title">Everything you need. Nothing you don't.</h2>
+      <p class="section-subtitle">Streamlined tools to help you manage your cash flow, verify statement accuracy, and stay on budget.</p>
+    </div>
+
+    <div class="features-grid">
+      <!-- Feature 1 -->
+      <div class="feature-card">
+        <div class="feature-icon-wrapper">
+          <svg class="feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+            <line x1="2" y1="10" x2="22" y2="10"/>
+            <line x1="6" y1="14" x2="6" y2="14"/>
+            <line x1="10" y1="14" x2="14" y2="14"/>
+          </svg>
+        </div>
+        <h3 class="feature-card-title">Automated Ledgering</h3>
+        <p class="feature-card-description">
+          Upload bank statement PDFs or spreadsheets and parse them instantly. Stop typing every transaction by hand.
+        </p>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="feature-card">
+        <div class="feature-icon-wrapper">
+          <svg class="feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <h3 class="feature-card-title">Smart Budgeting</h3>
+        <p class="feature-card-description">
+          Set monthly caps for spending categories. Track your remaining margins and prevent overspending.
+        </p>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="feature-card">
+        <div class="feature-icon-wrapper">
+          <svg class="feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
+            <path d="M22 12A10 10 0 0 0 12 2v10z"/>
+          </svg>
+        </div>
+        <h3 class="feature-card-title">Rich Analytics</h3>
+        <p class="feature-card-description">
+          Analyze cash flow dynamics using clear charts. Export clean financial summaries for statements or tax reporting.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section id="pricing" class="pricing-section">
+    <div class="section-header">
+      <h2 class="section-title">Transparent pricing</h2>
+      <p class="section-subtitle">Choose the perfect tier to align with your personal or business financial habits.</p>
+    </div>
+
+    <div class="pricing-grid">
+      <!-- Basic Plan -->
+      <div class="pricing-card">
+        <div class="pricing-header">
+          <h3 class="plan-name">Basic Plan</h3>
+          <p class="plan-desc">For straightforward personal tracking.</p>
+          <div class="plan-price">
+            <span class="currency">$</span>
+            <span class="amount">0</span>
+            <span class="period">/mo</span>
+          </div>
+        </div>
+        <ul class="plan-features">
+          <li>
+            <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Manual transaction entries
+          </li>
+          <li>
+            <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Up to 3 active budgets
+          </li>
+          <li>
+            <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            1 statement import / month
+          </li>
+          <li>
+            <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Standard analytics overview
+          </li>
+        </ul>
+        <div class="pricing-action">
+          <a routerLink="/auth/register" class="btn btn-secondary btn-full">Choose Basic</a>
+        </div>
+      </div>
+
+      <!-- Premium Plan -->
+      <div class="pricing-card featured">
+        <div class="plan-badge">Popular</div>
+        <div class="pricing-header">
+          <h3 class="plan-name">Premium Plan</h3>
+          <p class="plan-desc">For complete control and automation.</p>
+          <div class="plan-price">
+            <span class="currency">$</span>
+            <span class="amount">8</span>
+            <span class="period">/mo</span>
+          </div>
+        </div>
+        <ul class="plan-features">
+          <li>
+            <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Unlimited transactions
+          </li>
+          <li>
+            <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Unlimited active budgets
+          </li>
+          <li>
+            <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Unlimited statement parsing
+          </li>
+          <li>
+            <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            AI-suggested categories
+          </li>
+          <li>
+            <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Advanced export (PDF & Excel)
+          </li>
+          <li>
+            <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Priority support
+          </li>
+        </ul>
+        <div class="pricing-action">
+          <a routerLink="/auth/register" class="btn btn-primary btn-full">Upgrade to Premium</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <p class="copyright">&copy; 2026 FinTracker. All rights reserved.</p>
+      <div class="footer-links">
+        <a class="footer-link">Privacy Policy</a>
+        <a class="footer-link">Terms of Service</a>
+        <a class="footer-link">Support</a>
+      </div>
+    </div>
+  </footer>
+</div>

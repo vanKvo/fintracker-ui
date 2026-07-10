@@ -143,13 +143,36 @@ table {
 .amount-cell {
   font-weight: 500;
   text-align: right;
-  
+
   &.income {
     color: #2e7d32;
   }
   &.expense {
     color: #333;
   }
+}
+
+.editable-cell {
+  cursor: text;
+}
+
+.inline-edit-field {
+  width: 140px;
+
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    padding: 0 4px;
+  }
+}
+
+.inline-amount-input {
+  width: 100px;
+  text-align: right;
+  font: inherit;
+  font-weight: 500;
+  border: 1px solid #1565c0;
+  border-radius: 4px;
+  padding: 2px 6px;
+  outline: none;
 }
 
 th.mat-column-amount, td.mat-column-amount {

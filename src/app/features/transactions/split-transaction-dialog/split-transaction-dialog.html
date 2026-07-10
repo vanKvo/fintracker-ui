@@ -1,0 +1,52 @@
+<h2 mat-dialog-title>Split Transaction</h2>
+<mat-dialog-content>
+  <div class="split-summary">
+    <span class="merchant">{{ merchant }}</span>
+    <span class="total">Total: {{ absTotal | currency }}</span>
+  </div>
+
+  <div class="split-rows">
+    @for (row of rows(); track $index) {
+      <div class="split-row">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="amount-field">
+          <mat-label>Amount</mat-label>
+          <span matPrefix>$&nbsp;</span>
+          <input matInput type="number" step="0.01" min="0.01"
+                 [value]="row.amount ?? ''"
+                 (input)="updateAmount($index, $any($event.target).value)">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="category-field">
+          <mat-label>Category</mat-label>
+          <mat-select [value]="row.category" (selectionChange)="updateCategory($index, $event.value)">
+            @for (cat of categories; track cat) {
+              <mat-option [value]="cat">{{ cat }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <button mat-icon-button [disabled]="rows().length <= 2" (click)="removeRow($index)" aria-label="Remove split row">
+          <mat-icon>delete_outline</mat-icon>
+        </button>
+      </div>
+    }
+  </div>
+
+  <button mat-stroked-button class="add-row-btn" (click)="addRow()">
+    <mat-icon>add</mat-icon> Add another split
+  </button>
+
+  <div class="remaining-banner" [class.balanced]="remaining() === 0" [class.unbalanced]="remaining() !== 0">
+    @if (remaining() === 0) {
+      <mat-icon>check_circle</mat-icon>
+      <span>Fully allocated</span>
+    } @else {
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ remaining() > 0 ? (remaining() | currency) + ' remaining to allocate' : (remaining() * -1 | currency) + ' over the total' }}</span>
+    }
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary" [disabled]="!canSubmit()" (click)="confirm()">Split</button>
+</mat-dialog-actions>

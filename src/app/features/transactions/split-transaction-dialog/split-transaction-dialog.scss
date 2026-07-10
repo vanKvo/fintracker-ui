@@ -1,0 +1,59 @@
+.split-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+
+  .merchant {
+    font-weight: 500;
+  }
+
+  .total {
+    color: #666;
+  }
+}
+
+.split-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.split-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+
+  .amount-field {
+    width: 140px;
+  }
+
+  .category-field {
+    flex: 1;
+  }
+}
+
+.add-row-btn {
+  margin: 4px 0 16px;
+}
+
+.remaining-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+
+  &.balanced {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  &.unbalanced {
+    background: #fff3e0;
+    color: #e65100;
+  }
+}

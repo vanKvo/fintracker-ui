@@ -1,20 +1,36 @@
-<div class="auth-container mat-app-background">
-  <mat-card class="auth-card">
-    <mat-card-header>
-      <mat-card-title>Welcome Back</mat-card-title>
-      <mat-card-subtitle>Sign in to your FinTracker account</mat-card-subtitle>
-    </mat-card-header>
+<div class="auth-container">
+  <div class="auth-wrapper">
+    <div class="auth-brand" routerLink="/">
+      <svg class="brand-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2C7.5 4.5 4.5 8 4.5 12.5c0 5 7.5 9.5 7.5 9.5s7.5-4.5 7.5-9.5c0-4.5-3-8-7.5-10.5z" stroke-linejoin="round"/>
+        <path d="M12 21V10" stroke-width="2.2" />
+        <path d="M12 14.5c2-0.8 3.5-2.5 3.5-4" stroke-width="2" />
+        <path d="M12 17.5c-2-0.8-3.5-2.5-3.5-4" stroke-width="2" />
+      </svg>
+      <span class="brand-name">FinTracker</span>
+    </div>
 
-    <mat-card-content class="auth-form">
-      <button mat-flat-button color="primary" class="full-width" (click)="signIn()">
-        Sign in with FinTracker
-      </button>
-    </mat-card-content>
+    <mat-card class="auth-card">
+      <mat-card-header>
+        <mat-card-title>Welcome Back</mat-card-title>
+        <mat-card-subtitle>Sign in to your FinTracker account</mat-card-subtitle>
+      </mat-card-header>
 
-    <mat-card-footer>
-      <div class="footer-links">
-        <span>Don't have an account? <a routerLink="/auth/register">Sign up</a></span>
-      </div>
-    </mat-card-footer>
-  </mat-card>
+      <mat-card-content class="auth-form">
+        <button mat-flat-button color="primary" class="full-width sign-in-btn" (click)="signIn()">
+          Sign in with FinTracker
+        </button>
+      </mat-card-content>
+
+      <mat-card-footer>
+        <div class="footer-links">
+          <span>Don't have an account? <a routerLink="/auth/register">Sign up</a></span>
+        </div>
+      </mat-card-footer>
+    </mat-card>
+
+    <div class="auth-back-nav">
+      <a routerLink="/" class="back-link">← Back to home</a>
+    </div>
+  </div>
 </div>

@@ -1,0 +1,43 @@
+<h2 mat-dialog-title>Add Tags</h2>
+<mat-dialog-content>
+  <p class="subtitle">{{ merchant }}</p>
+
+  @if (existingTags.length > 0) {
+    <div class="existing-tags">
+      <span class="label">Existing tags</span>
+      <mat-chip-set>
+        @for (tag of existingTags; track tag) {
+          <mat-chip disabled>{{ tag }}</mat-chip>
+        }
+      </mat-chip-set>
+    </div>
+  }
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>New tags</mat-label>
+    <mat-chip-grid #chipGrid aria-label="New tags">
+      @for (tag of newTags(); track tag) {
+        <mat-chip-row (removed)="removeTag(tag)">
+          {{ tag }}
+          <button matChipRemove aria-label="Remove tag">
+            <mat-icon>cancel</mat-icon>
+          </button>
+        </mat-chip-row>
+      }
+    </mat-chip-grid>
+    <input placeholder="Type a tag and press Enter..."
+           [matChipInputFor]="chipGrid"
+           [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+           [matChipInputAddOnBlur]="true"
+           (matChipInputTokenEnd)="addTag($event)">
+  </mat-form-field>
+
+  @if (errorMessage()) {
+    <p class="error-text">{{ errorMessage() }}</p>
+  }
+  <p class="hint-text">{{ remainingSlots() }} tag slot(s) remaining.</p>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary" [disabled]="newTags().length === 0" (click)="confirm()">Add Tags</button>
+</mat-dialog-actions>

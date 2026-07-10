@@ -51,8 +51,8 @@ export class AuthService {
 
   async isAuthenticated(): Promise<boolean> {
     try {
-      await fetchAuthSession();
-      return true;
+      const session = await fetchAuthSession();
+      return !!session.tokens;
     } catch {
       return false;
     }

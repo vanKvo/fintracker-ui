@@ -32,7 +32,19 @@
     
     <div class="detail-row">
       <span class="label">Category</span>
-      <span class="value">{{ transaction.category }}</span>
+      @if (isEditingCategory) {
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="inline-edit-field">
+          <mat-select [value]="transaction.category" cdkFocusInitial
+                      (selectionChange)="onCategorySelected($event.value)"
+                      (closed)="isEditingCategory = false">
+            @for (cat of categories; track cat) {
+              <mat-option [value]="cat">{{ cat }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      } @else {
+        <span class="value">{{ transaction.category }}</span>
+      }
     </div>
 
     <div class="detail-row" *ngIf="transaction.tags && transaction.tags.length > 0">
@@ -50,7 +62,7 @@
   
   <mat-divider></mat-divider>
   <div class="panel-actions">
-    <button mat-stroked-button color="primary">Edit Category</button>
-    <button mat-stroked-button *ngIf="transaction.status === 'Pending'">Approve</button>
+    <button mat-stroked-button color="primary" (click)="startEditCategory()">Edit Category</button>
+    <button mat-stroked-button *ngIf="transaction.status === 'Pending'" (click)="onApprove()">Approve</button>
   </div>
 </div>

@@ -16,11 +16,14 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { SelectionModel } from '@angular/cdk/collections';
 import { TransactionDetailPanel } from './transaction-detail-panel/transaction-detail-panel';
+import { SplitTransactionDialog, SplitResult } from './split-transaction-dialog/split-transaction-dialog';
+import { AddTagDialog } from './add-tag-dialog/add-tag-dialog';
 import { TransactionService } from '../../core/services/transaction.service';
 import { catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 
 export interface Transaction {
   id: string;
@@ -34,6 +37,8 @@ export interface Transaction {
   notes?: string;
   description?: string;
   sourceStatementId?: string;
+  isExcluded: boolean;
+  isManual: boolean;
 }
 
 @Component({
@@ -57,6 +62,7 @@ export interface Transaction {
     MatNativeDateModule,
     MatSidenavModule,
     MatSnackBarModule,
+    MatDialogModule,
     TransactionDetailPanel
   ],
   templateUrl: './transactions.html',
@@ -66,31 +72,40 @@ export class Transactions implements AfterViewInit {
   displayedColumns: string[] = ['select', 'date', 'merchant', 'account', 'category', 'amount', 'status', 'actions'];
   dataSource = new MatTableDataSource<Transaction>([]);
   selection = new SelectionModel<Transaction>(true, []);
-  
+
   categories: string[] = [];
   accounts: string[] = [];
 
   selectedCategory = 'All';
   selectedAccount = 'All';
+  startDate: Date | null = null;
+  endDate: Date | null = null;
   selectedTab = signal(0); // 0: All, 1: Pending, 2: Approved, 3: Manual
   TotalAmount = signal(0);
-  
+
   selectedTransaction = signal<Transaction | null>(null);
+
+  // REQ-2.2 "Inline Row Modification": tracks which single cell is being edited in place.
+  editingCell = signal<{ id: string; field: 'category' | 'amount' } | null>(null);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private transactionService: TransactionService, private snackBar: MatSnackBar) {
-    this.transactionService.getTransactions().pipe(
-      catchError(error => {
-        this.snackBar.open('Failed to load transactions. Verify ledger-service is running.', 'Dismiss', { duration: 5000 });
-        return of([]);
-      })
-    ).subscribe(data => {
-      this.dataSource.data = data;
-      this.categories = [...new Set(data.map(t => t.category))].filter(c => c !== '-');
-      this.accounts = [...new Set(data.map(t => t.account))];
-      this.applyFilter();
+  constructor(
+    private transactionService: TransactionService,
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog
+  ) {
+    this.loadCategories();
+    this.loadTransactions();
+  }
+
+  // REQ-2.2 "Inline Row Modification": the category drop-down is the system-defined list from
+  // TransactionCategory, not derived from whatever happens to be on already-loaded transactions.
+  private loadCategories() {
+    this.transactionService.getCategories().subscribe({
+      next: (categories) => this.categories = categories,
+      error: () => this.snackBar.open('Failed to load categories.', 'Dismiss', { duration: 5000 })
     });
   }
 
@@ -99,6 +114,20 @@ export class Transactions implements AfterViewInit {
     this.dataSource.sort = this.sort;
     this.setupFilter();
     this.calculateTotal();
+  }
+
+  private loadTransactions() {
+    this.transactionService.getTransactions().pipe(
+      catchError(error => {
+        this.snackBar.open('Failed to load transactions. Verify ledger-service is running.', 'Dismiss', { duration: 5000 });
+        return of([]);
+      })
+    ).subscribe(data => {
+      this.dataSource.data = data;
+      this.accounts = [...new Set(data.map(t => t.account))];
+      this.selection.clear();
+      this.applyFilter();
+    });
   }
 
   isAllSelected() {
@@ -121,33 +150,57 @@ export class Transactions implements AfterViewInit {
       const matchMerchant = data.merchant.toLowerCase().includes(searchTerms.text);
       const matchCategory = searchTerms.category === 'All' || data.category === searchTerms.category;
       const matchAccount = searchTerms.account === 'All' || data.account === searchTerms.account;
-      
+
+      // data.date is a plain 'YYYY-MM-DD' string (from LocalDate); lexicographic
+      // comparison is safe and avoids timezone-shift bugs from Date parsing.
+      const matchStartDate = !searchTerms.startDate || data.date >= searchTerms.startDate;
+      const matchEndDate = !searchTerms.endDate || data.date <= searchTerms.endDate;
+
       let matchStatus = true;
       if (searchTerms.tab === 1) matchStatus = data.status === 'Pending';
       if (searchTerms.tab === 2) matchStatus = data.status === 'Approved';
       if (searchTerms.tab === 3) matchStatus = data.status === 'Manual';
 
-      return matchMerchant && matchCategory && matchAccount && matchStatus;
+      return matchMerchant && matchCategory && matchAccount && matchStartDate && matchEndDate && matchStatus;
     };
+  }
+
+  onStartDateChange(date: Date | null) {
+    this.startDate = date;
+    this.applyFilter();
+  }
+
+  onEndDateChange(date: Date | null) {
+    this.endDate = date;
+    this.applyFilter();
+  }
+
+  private toLocalDateString(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   applyFilter() {
     const searchInput = document.querySelector('input[placeholder="Search by merchant..."]') as HTMLInputElement;
     const searchText = (searchInput ? searchInput.value : '').trim().toLowerCase();
-    
+
     const filterValue = JSON.stringify({
       text: searchText,
       category: this.selectedCategory,
       account: this.selectedAccount,
+      startDate: this.startDate ? this.toLocalDateString(this.startDate) : null,
+      endDate: this.endDate ? this.toLocalDateString(this.endDate) : null,
       tab: this.selectedTab()
     });
-    
+
     this.dataSource.filter = filterValue;
 
     if (this.dataSource.paginator) {
       this.dataSource.paginator.firstPage();
     }
-    
+
     this.calculateTotal();
   }
 
@@ -169,12 +222,187 @@ export class Transactions implements AfterViewInit {
     this.selectedTransaction.set(null);
   }
 
-  approveSelected() {}
+  // ── REQ-2.2.1 Inline Row Modification ──────────────────────────────────────
+
+  isEditing(row: Transaction, field: 'category' | 'amount'): boolean {
+    const editing = this.editingCell();
+    return !!editing && editing.id === row.id && editing.field === field;
+  }
+
+  startEditCategory(row: Transaction) {
+    if (this.isEditing(row, 'category')) return;
+    this.editingCell.set({ id: row.id, field: 'category' });
+  }
+
+  closeCategoryEdit() {
+    this.editingCell.set(null);
+  }
+
+  saveCategory(row: Transaction, category: string) {
+    this.editingCell.set(null);
+    if (!category || category === row.category) return;
+
+    this.transactionService.updateTransaction(row.id, { category }).subscribe({
+      next: () => this.loadTransactions(),
+      error: () => this.snackBar.open('Failed to update category.', 'Dismiss', { duration: 5000 })
+    });
+  }
+
+  startEditAmount(row: Transaction) {
+    if (this.isEditing(row, 'amount')) return;
+    this.editingCell.set({ id: row.id, field: 'amount' });
+  }
+
+  cancelAmountEdit() {
+    this.editingCell.set(null);
+  }
+
+  saveAmount(row: Transaction, rawValue: string) {
+    if (!this.isEditing(row, 'amount')) return;
+
+    const value = Number(rawValue);
+    this.editingCell.set(null);
+
+    if (!Number.isFinite(value) || value === 0) {
+      this.snackBar.open('Amount must be a non-zero number.', 'Dismiss', { duration: 4000 });
+      return;
+    }
+    if (value === row.amount) return;
+
+    this.transactionService.updateTransaction(row.id, { amount: value }).subscribe({
+      next: () => this.loadTransactions(),
+      error: () => this.snackBar.open('Failed to update amount.', 'Dismiss', { duration: 5000 })
+    });
+  }
+
+  // ── REQ-2.2.2 Tag Array Appending ───────────────────────────────────────────
+
+  openAddTagDialog(row: Transaction) {
+    const dialogRef = this.dialog.open(AddTagDialog, {
+      width: '420px',
+      data: { merchant: row.merchant, existingTags: row.tags ?? [] }
+    });
+
+    dialogRef.afterClosed().subscribe((newTags: string[] | undefined) => {
+      if (!newTags || newTags.length === 0) return;
+
+      this.transactionService.appendTags(row.id, newTags).subscribe({
+        next: () => this.loadTransactions(),
+        error: () => this.snackBar.open('Failed to add tags.', 'Dismiss', { duration: 5000 })
+      });
+    });
+  }
+
+  // ── REQ-2.2.3 Transaction Splitting ─────────────────────────────────────────
+
+  openSplitDialog(row: Transaction) {
+    const dialogRef = this.dialog.open(SplitTransactionDialog, {
+      width: '480px',
+      data: { merchant: row.merchant, totalAmount: row.amount, categories: this.categories }
+    });
+
+    dialogRef.afterClosed().subscribe((splits: SplitResult[] | undefined) => {
+      if (!splits || splits.length === 0) return;
+
+      this.transactionService.splitTransaction(row.id, splits).subscribe({
+        next: () => this.loadTransactions(),
+        error: (err) => {
+          const message = err?.error?.detail || 'Failed to split transaction.';
+          this.snackBar.open(message, 'Dismiss', { duration: 5000 });
+        }
+      });
+    });
+  }
+
+  // ── REQ-2.2.4 Spending Formula Exclusion ────────────────────────────────────
+
+  toggleExcludeRow(row: Transaction) {
+    this.transactionService.excludeTransaction(row.id, !row.isExcluded).subscribe({
+      next: () => this.loadTransactions(),
+      error: () => this.snackBar.open('Failed to update exclusion status.', 'Dismiss', { duration: 5000 })
+    });
+  }
+
+  excludeSelected() {
+    const ids = this.selection.selected.map(t => t.id);
+    if (ids.length === 0) return;
+
+    this.transactionService.bulkOperations({ transactionIds: ids, action: 'EXCLUDE' }).subscribe({
+      next: () => this.loadTransactions(),
+      error: () => this.snackBar.open('Failed to exclude selected transactions.', 'Dismiss', { duration: 5000 })
+    });
+  }
+
+  // ── REQ-2.2.5 Status Promotion ───────────────────────────────────────────────
+
+  approveRow(row: Transaction) {
+    this.transactionService.approveTransaction(row.id).subscribe({
+      next: () => this.loadTransactions(),
+      error: () => this.snackBar.open('Failed to approve transaction.', 'Dismiss', { duration: 5000 })
+    });
+  }
+
+  approveSelected() {
+    const ids = this.selection.selected.map(t => t.id);
+    if (ids.length === 0) return;
+
+    this.transactionService.bulkOperations({ transactionIds: ids, action: 'APPROVE' }).subscribe({
+      next: () => this.loadTransactions(),
+      error: () => this.snackBar.open('Failed to approve selected transactions.', 'Dismiss', { duration: 5000 })
+    });
+  }
+
+  // ── REQ-2.3 Manual Entries (hard delete; kept here since it shares the row menu/bulk bar) ──
+
+  deleteRow(row: Transaction) {
+    if (!window.confirm(`Delete transaction "${row.merchant}"? This cannot be undone.`)) return;
+
+    this.transactionService.deleteTransaction(row.id).subscribe({
+      next: () => this.loadTransactions(),
+      error: () => this.snackBar.open('Failed to delete transaction.', 'Dismiss', { duration: 5000 })
+    });
+  }
+
+  deleteSelected() {
+    const targets = this.selection.selected.filter(t => t.isManual);
+    const skipped = this.selection.selected.length - targets.length;
+
+    if (targets.length === 0) {
+      this.snackBar.open('Only manually-entered transactions can be deleted.', 'Dismiss', { duration: 5000 });
+      return;
+    }
+    if (!window.confirm(`Delete ${targets.length} transaction(s)? This cannot be undone.`)) return;
+
+    forkJoin(targets.map(t => this.transactionService.deleteTransaction(t.id))).subscribe({
+      next: () => {
+        if (skipped > 0) {
+          this.snackBar.open(
+            `Deleted ${targets.length} transaction(s). Skipped ${skipped} non-manual transaction(s).`,
+            'Dismiss', { duration: 5000 }
+          );
+        }
+        this.loadTransactions();
+      },
+      error: () => this.snackBar.open('Failed to delete selected transactions.', 'Dismiss', { duration: 5000 })
+    });
+  }
+
   categorizeSelected() {}
-  deleteSelected() {}
   exportSelected() {}
 
-  rowAction(action: string, transaction: Transaction) {
-    console.log(`Action: ${action} on`, transaction);
+  // ── Detail panel wiring ──────────────────────────────────────────────────────
+
+  onPanelCategoryChange(category: string) {
+    const row = this.selectedTransaction();
+    if (!row) return;
+    this.saveCategory(row, category);
+    this.selectedTransaction.set({ ...row, category });
+  }
+
+  onPanelApprove() {
+    const row = this.selectedTransaction();
+    if (!row) return;
+    this.approveRow(row);
+    this.closePanel();
   }
 }

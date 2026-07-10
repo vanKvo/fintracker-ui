@@ -9,7 +9,7 @@ export const environment: AppEnvironment = {
   cognito: {
     userPoolId: 'us-east-1_XwKqA7fDT',
     userPoolClientId: '6vua2jh8u2rp5bhk4rcpvieqvo',
-    oauthDomain: 'https://us-east-1xwkqa7fdt.auth.us-east-1.amazoncognito.com',
+    oauthDomain: 'us-east-1xwkqa7fdt.auth.us-east-1.amazoncognito.com',
     redirectSignIn: 'http://localhost:4200/auth/callback',
     redirectSignOut: 'http://localhost:4200/auth/login',
   },

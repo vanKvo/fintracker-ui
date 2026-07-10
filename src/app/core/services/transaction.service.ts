@@ -1,8 +1,18 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AccountService } from './account.service';
+
+export interface UpdateTransactionPayload {
+  category?: string;
+  amount?: number;
+}
+
+export interface SplitItemPayload {
+  amount: number;
+  category: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -19,7 +29,7 @@ export class TransactionService {
     ]).pipe(
       map(([transactions, accounts]) => {
         const accountMap = new Map(accounts.map(a => [a.accountId, a.accountName]));
-        
+
         return transactions.map(t => ({
           id: t.transactionId,
           date: t.txDate,
@@ -30,22 +40,37 @@ export class TransactionService {
           amount: t.amount,
           status: t.isManual ? 'Manual' : (t.status === 'PENDING_APPROVAL' ? 'Pending' : (t.status === 'POSTED' ? 'Approved' : 'Pending')),
           tags: t.tags || [],
-          sourceStatementId: t.statementId
+          sourceStatementId: t.statementId,
+          isExcluded: !!t.isExcluded,
+          isManual: !!t.isManual
         }));
       })
     );
+  }
+
+  getCategories(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/categories`);
   }
 
   approveTransaction(id: string): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/${id}/approve`, {});
   }
 
-  excludeTransaction(id: string): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/${id}/exclude`, {});
+  excludeTransaction(id: string, exclude: boolean): Observable<any> {
+    const params = new HttpParams().set('exclude', exclude);
+    return this.http.put<any>(`${this.apiUrl}/${id}/exclude`, {}, { params });
   }
 
-  splitTransaction(id: string, payload: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/${id}/split`, payload);
+  updateTransaction(id: string, payload: UpdateTransactionPayload): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/${id}`, payload);
+  }
+
+  appendTags(id: string, tags: string[]): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/${id}/tags`, { tags });
+  }
+
+  splitTransaction(id: string, splits: SplitItemPayload[]): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${id}/split`, { splits });
   }
 
   bulkOperations(payload: any): Observable<any> {
