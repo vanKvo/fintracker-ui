@@ -13,13 +13,13 @@
   flex-wrap: wrap;
   gap: 16px;
 
+  // Page title standard (see docs/color_schema/color_schema.md): 20px/700, text-main, Plus Jakarta Sans.
   .view-title {
-    font-size: 28px;
+    font-size: 20px;
     font-weight: 700;
-    color: var(--color-brand-primary);
+    color: var(--color-text-main);
     margin: 0;
     font-family: var(--font-primary);
-    letter-spacing: -0.02em;
   }
 }
 
