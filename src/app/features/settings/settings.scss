@@ -5,10 +5,13 @@
 .header-actions {
   margin-bottom: 2rem;
 
+  // Page title standard (see docs/color_schema/color_schema.md): 20px/700, text-main, Plus Jakarta Sans.
   .page-title {
-    font-size: 1.5rem;
-    color: var(--text-dark);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-text-main);
     margin: 0;
+    font-family: var(--font-primary);
   }
 }
 
@@ -18,11 +21,11 @@
   // Customizing mat-tab-group
   ::ng-deep {
     .mat-mdc-tab-header {
-      border-bottom: 1px solid var(--surface-gray);
+      border-bottom: 1px solid #e2e8f0;
     }
-    
+
     .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
-      color: var(--primary-blue);
+      color: var(--color-brand-primary);
     }
   }
 }
@@ -43,7 +46,7 @@
     justify-content: center;
     text-align: center;
     padding: 4rem 2rem;
-    color: var(--text-secondary);
+    color: var(--color-text-muted);
 
     .large-icon {
       font-size: 3rem;
@@ -51,9 +54,9 @@
       height: 3rem;
       margin-bottom: 1rem;
     }
-    
+
     h3 {
-      color: var(--text-dark);
+      color: var(--color-text-main);
       margin-bottom: 0.5rem;
     }
     
@@ -73,8 +76,8 @@
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    background-color: var(--secondary-light-blue);
-    color: white;
+    background-color: var(--color-brand-primary);
+    color: #ffffff;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -90,12 +93,12 @@
     h3 {
       font-size: 1.25rem;
       margin: 0 0 0.25rem 0;
-      color: var(--text-dark);
+      color: var(--color-text-main);
     }
-    
+
     p {
       margin: 0 0 0.5rem 0;
-      color: var(--text-secondary);
+      color: var(--color-text-muted);
       font-size: 0.875rem;
     }
   }
@@ -119,7 +122,7 @@
 
   .section-title {
     font-size: 1.125rem;
-    color: var(--text-dark);
+    color: var(--color-text-main);
     margin: 1.5rem 0 0.5rem 0;
   }
 
@@ -142,12 +145,12 @@
         
         strong {
           display: block;
-          color: var(--text-dark);
+          color: var(--color-text-main);
           margin-bottom: 0.25rem;
         }
-        
+
         p {
-          color: var(--text-secondary);
+          color: var(--color-text-muted);
           font-size: 0.875rem;
           margin: 0;
         }
