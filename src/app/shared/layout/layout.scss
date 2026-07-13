@@ -1,58 +1,141 @@
-.sidenav-container {
+.app-container {
+  display: flex;
+  flex-direction: column;
   height: 100vh;
 }
 
-.sidenav {
-  width: 250px;
-  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-  background-color: var(--background-white);
-  border-right: 1px solid var(--surface-gray);
-  
-  .mat-toolbar {
-    background: inherit;
-    border-bottom: 1px solid var(--surface-gray);
-    color: var(--primary-blue);
-    font-weight: bold;
-    font-size: 1.25rem;
-  }
-}
+.top-navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #ffffff; // White background
+  border-bottom: 1px solid #e2e8f0; // Subtle separating border
+  padding: 0 24px;
+  height: 64px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  color: var(--color-text-main);
+  z-index: 1000;
+  flex-shrink: 0;
 
-.toolbar-spacer {
-  flex: 1 1 auto;
+  .nav-left {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    height: 100%;
+  }
+
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+
+    .brand-icon {
+      width: 24px;
+      height: 24px;
+      color: var(--color-brand-accent); // Gold icon
+    }
+
+    .brand-name {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--color-brand-primary); // Forest green logo text
+    }
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    height: 100%;
+
+    .nav-item {
+      color: var(--color-text-muted); // Soft gray text
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      height: 100%;
+      border-bottom: 3px solid transparent;
+      padding: 0 4px;
+      box-sizing: border-box;
+      transition: color 0.2s, border-color 0.2s;
+
+      &:hover {
+        color: var(--color-brand-primary); // Hover to forest green
+      }
+
+      &.active-link {
+        color: var(--color-brand-primary); // Forest green when active
+        border-bottom-color: var(--color-brand-primary); // Underline in forest green
+      }
+    }
+  }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 20px;
+      transition: background-color 0.2s;
+      color: var(--color-text-main);
+
+      &:hover {
+        background-color: #f1f5f9;
+      }
+
+      .avatar-circle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: #e2e8f0; // Light gray circle for user profile
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        mat-icon {
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+          color: var(--color-brand-primary); // Forest green user icon
+        }
+      }
+
+      .username {
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+
+      .arrow-down {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        color: var(--color-text-muted);
+      }
+    }
+
+    .settings-btn {
+      color: var(--color-text-muted);
+
+      &:hover {
+        color: var(--color-brand-primary);
+      }
+    }
+  }
 }
 
 .main-content {
-  padding: 20px;
-  background-color: var(--surface-gray);
-  min-height: calc(100vh - 64px); // Subtract toolbar height
-}
-
-.active-link {
-  background-color: rgba(15, 98, 254, 0.1) !important; // primary-blue with opacity
-  color: var(--primary-blue) !important;
-  border-right: 3px solid var(--primary-blue);
-  
-  mat-icon {
-    color: var(--primary-blue);
-  }
-}
-
-.header-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  text-decoration: none;
-}
-
-.brand-icon {
-  width: 22px;
-  height: 22px;
-  color: var(--color-brand-accent);
-}
-
-.brand-name {
-  font-size: 1.15rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--color-brand-primary);
+  background-color: var(--color-bg-secondary); // #FAFAFA
+  flex-grow: 1;
+  overflow-y: auto;
+  box-sizing: border-box;
 }

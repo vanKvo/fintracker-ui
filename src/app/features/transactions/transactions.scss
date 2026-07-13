@@ -57,6 +57,22 @@
     align-items: stretch;
     padding: 16px 24px 0;
   }
+
+  // Matches mat-card-header's 24px horizontal padding so the table's left/right edges
+  // line up with the search toolbar above it, instead of the table stretching to the
+  // full card width while the toolbar sits inset.
+  mat-card-content {
+    padding: 0 24px 24px;
+  }
+}
+
+// The table has more columns than comfortably fit at narrower widths (Status/Source values
+// like "STATEMENT_UPLOAD"/"MANUAL_ENTRY" are long). Rather than letting columns squish
+// unreadably, give the table a fixed minimum width and let it scroll horizontally within its
+// own container — the search toolbar above stays put and doesn't scroll with it.
+.table-scroll-container {
+  overflow-x: auto;
+  width: 100%;
 }
 
 .top-toolbar {
@@ -92,6 +108,7 @@
 
 table {
   width: 100%;
+  min-width: 1200px;
 }
 
 .transaction-row {
@@ -125,8 +142,9 @@ table {
   border-radius: 16px;
   font-size: 12px;
   font-weight: 500;
-  
-  &.approved {
+  white-space: nowrap;
+
+  &.posted {
     background: #e8f5e9;
     color: #2e7d32;
   }
@@ -134,10 +152,41 @@ table {
     background: #fff3e0;
     color: #e65100;
   }
-  &.manual {
+  &.deleted {
+    background: #ffebee;
+    color: #c62828;
+  }
+}
+
+.source-indicator {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+
+  &.manual_entry {
     background: #e3f2fd;
     color: #1565c0;
   }
+  &.statement_upload {
+    background: #f3e5f5;
+    color: #6a1b9a;
+  }
+  &.bank_sync {
+    background: #e0f2f1;
+    color: #00695c;
+  }
+}
+
+.tag-chip {
+  background-color: #eee;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  display: inline-block;
+  white-space: nowrap;
+  margin: 2px 4px 2px 0;
 }
 
 .amount-cell {
@@ -178,10 +227,35 @@ table {
 th.mat-column-amount, td.mat-column-amount {
   text-align: right;
   padding-right: 24px;
+  width: 130px;
 }
 
 th.mat-column-select, td.mat-column-select {
   width: 50px;
+}
+
+th.mat-column-date, td.mat-column-date {
+  width: 110px;
+}
+
+th.mat-column-merchant, td.mat-column-merchant {
+  width: 220px;
+}
+
+th.mat-column-account, td.mat-column-account {
+  width: 140px;
+}
+
+th.mat-column-category, td.mat-column-category {
+  width: 160px;
+}
+
+th.mat-column-status, td.mat-column-status {
+  width: 160px;
+}
+
+th.mat-column-source, td.mat-column-source {
+  width: 170px;
 }
 
 th.mat-column-actions, td.mat-column-actions {

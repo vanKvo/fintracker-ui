@@ -1,68 +1,72 @@
-<mat-sidenav-container class="sidenav-container">
-  <mat-sidenav #drawer class="sidenav" fixedInViewport
-      [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
-      [mode]="(isHandset$ | async) ? 'over' : 'side'"
-      [opened]="(isHandset$ | async) === false">
-    <mat-toolbar>
+<div class="app-container">
+  <header class="top-navbar">
+    <div class="nav-left">
       <div class="header-brand">
-      <svg class="brand-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 2C7.5 4.5 4.5 8 4.5 12.5c0 5 7.5 9.5 7.5 9.5s7.5-4.5 7.5-9.5c0-4.5-3-8-7.5-10.5z" stroke-linejoin="round"/>
-        <path d="M12 21V10" stroke-width="2.2" />
-        <path d="M12 14.5c2-0.8 3.5-2.5 3.5-4" stroke-width="2" />
-        <path d="M12 17.5c-2-0.8-3.5-2.5-3.5-4" stroke-width="2" />
-      </svg>
-      <span class="brand-name">FinTracker</span>
-    </div>
-    </mat-toolbar>
-    <mat-nav-list>
-      <a mat-list-item routerLink="/dashboard" routerLinkActive="active-link">
-        <mat-icon matListItemIcon>dashboard</mat-icon>
-        <span matListItemTitle>Dashboard</span>
-      </a>
-      <a mat-list-item routerLink="/transactions" routerLinkActive="active-link">
-        <mat-icon matListItemIcon>receipt_long</mat-icon>
-        <span matListItemTitle>Transactions</span>
-      </a>
-      <a mat-list-item routerLink="/statements" routerLinkActive="active-link">
-        <mat-icon matListItemIcon>description</mat-icon>
-        <span matListItemTitle>Statements</span>
-      </a>
-      <a mat-list-item routerLink="/budgets" routerLinkActive="active-link">
-        <mat-icon matListItemIcon>account_balance_wallet</mat-icon>
-        <span matListItemTitle>Budgets</span>
-      </a>
-      <a mat-list-item routerLink="/reports" routerLinkActive="active-link">
-        <mat-icon matListItemIcon>bar_chart</mat-icon>
-        <span matListItemTitle>Reports</span>
-      </a>
-      <a mat-list-item routerLink="/settings" routerLinkActive="active-link">
-        <mat-icon matListItemIcon>settings</mat-icon>
-        <span matListItemTitle>Settings</span>
-      </a>
-    </mat-nav-list>
-  </mat-sidenav>
-  <mat-sidenav-content>
-    <mat-toolbar color="primary">
-      @if (isHandset$ | async) {
-        <button
-          type="button"
-          aria-label="Toggle sidenav"
-          mat-icon-button
-          (click)="drawer.toggle()">
-          <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
-        </button>
+        <svg class="brand-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2C7.5 4.5 4.5 8 4.5 12.5c0 5 7.5 9.5 7.5 9.5s7.5-4.5 7.5-9.5c0-4.5-3-8-7.5-10.5z" stroke-linejoin="round"/>
+          <path d="M12 21V10" stroke-width="2.2" />
+          <path d="M12 14.5c2-0.8 3.5-2.5 3.5-4" stroke-width="2" />
+          <path d="M12 17.5c-2-0.8-3.5-2.5-3.5-4" stroke-width="2" />
+        </svg>
+        <span class="brand-name">FinTracker</span>
+      </div>
+
+      <!-- Desktop Nav Links -->
+      @if ((isHandset$ | async) === false) {
+        <nav class="nav-links">
+          <a routerLink="/dashboard" routerLinkActive="active-link" class="nav-item">Dashboard</a>
+          <a routerLink="/transactions" routerLinkActive="active-link" class="nav-item">Transactions</a>
+          <a routerLink="/accounts" routerLinkActive="active-link" class="nav-item">Accounts</a>
+          <a routerLink="/statements" routerLinkActive="active-link" class="nav-item">Statements</a>
+          <a routerLink="/budgets" routerLinkActive="active-link" class="nav-item">Budgets</a>
+          <a routerLink="/reports" routerLinkActive="active-link" class="nav-item">Reports</a>
+        </nav>
       }
-      <span>FinTracker</span>
-      <span class="toolbar-spacer"></span>
-      <button mat-icon-button aria-label="Log out" (click)="logout()">
-        <mat-icon>logout</mat-icon>
+    </div>
+    
+    <div class="nav-right">
+      <!-- Mobile Hamburger menu -->
+      @if (isHandset$ | async) {
+        <button mat-icon-button [matMenuTriggerFor]="mobileNavMenu" aria-label="Toggle navigation">
+          <mat-icon>menu</mat-icon>
+        </button>
+        <mat-menu #mobileNavMenu="matMenu">
+          <a mat-menu-item routerLink="/dashboard">Dashboard</a>
+          <a mat-menu-item routerLink="/transactions">Transactions</a>
+          <a mat-menu-item routerLink="/accounts">Accounts</a>
+          <a mat-menu-item routerLink="/statements">Statements</a>
+          <a mat-menu-item routerLink="/budgets">Budgets</a>
+          <a mat-menu-item routerLink="/reports">Reports</a>
+          <a mat-menu-item routerLink="/settings">Settings</a>
+          <button mat-menu-item (click)="logout()">
+            <mat-icon>logout</mat-icon>
+            <span>Log out</span>
+          </button>
+        </mat-menu>
+      }
+
+      <div class="user-profile" [matMenuTriggerFor]="profileMenu">
+        <div class="avatar-circle">
+          <mat-icon>person</mat-icon>
+        </div>
+        <span class="username">John Doe</span>
+        <mat-icon class="arrow-down">keyboard_arrow_down</mat-icon>
+      </div>
+      <mat-menu #profileMenu="matMenu">
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Log out</span>
+        </button>
+      </mat-menu>
+      
+      <button mat-icon-button routerLink="/settings" class="settings-btn" aria-label="Settings">
+        <mat-icon>settings</mat-icon>
       </button>
-    </mat-toolbar>
+    </div>
+  </header>
 
-    <!-- Main Content Area -->
-    <main class="main-content">
-      <router-outlet></router-outlet>
-    </main>
-
-  </mat-sidenav-content>
-</mat-sidenav-container>
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

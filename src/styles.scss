@@ -11,7 +11,7 @@ html {
   // Custom theme properties for Wealth & Growth (Option 1) design tokens
   --color-bg-primary: #FFFFFF;
   --color-bg-secondary: #FAFAFA;
-  --color-brand-primary: #133324;
+  --color-brand-primary: #155e37;
   --color-brand-accent: #D4AF37;
   --color-text-main: #111827;
   --color-text-muted: #4B5563;
@@ -57,5 +57,39 @@ body {
   // Reset the user agent margin.
   margin: 0;
   height: 100%;
+}
+
+// Global Typography overrides for all Angular Material & standard elements
+body,
+h1, h2, h3, h4, h5, h6,
+p, span, a, input, select, textarea,
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-card,
+.mat-mdc-dialog-title,
+.mat-mdc-form-field,
+.mat-mdc-select,
+.mat-mdc-option,
+.mat-mdc-menu-item,
+.mat-mdc-tab-link,
+.mat-mdc-tab,
+.mat-mdc-list-item,
+.mat-mdc-table,
+.mat-mdc-header-cell,
+.mat-mdc-cell,
+.mdc-data-table__cell,
+.mdc-data-table__header-cell {
+  font-family: var(--font-primary) !important;
+}
+
+// Force monospace on any cell or element showing balance, numbers or account numbers
+.financial-value,
+.mono-text,
+.summary-val,
+.financial-data-table,
+.account-number,
+.balance-text {
+  font-family: var(--font-mono) !important;
+  font-variant-numeric: tabular-nums;
 }
 /* You can add global styles to this file, and also import other style files */

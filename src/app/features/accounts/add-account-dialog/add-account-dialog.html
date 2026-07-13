@@ -1,0 +1,45 @@
+<h2 mat-dialog-title class="dialog-title">Link New Account</h2>
+<mat-dialog-content class="dialog-content">
+  <div class="form-container">
+    <!-- Account Name -->
+    <mat-form-field appearance="outline" class="form-field" subscriptSizing="dynamic">
+      <mat-label>Account Name</mat-label>
+      <input matInput [value]="accountName()" (input)="accountName.set($any($event.target).value)" placeholder="e.g. Chase" required />
+    </mat-form-field>
+
+    <!-- Account Type -->
+    <mat-form-field appearance="outline" class="form-field" subscriptSizing="dynamic">
+      <mat-label>Account Type</mat-label>
+      <mat-select [value]="accountType()" (selectionChange)="accountType.set($event.value)">
+        @for (t of accountTypes; track t) {
+          <mat-option [value]="t">{{ t }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Account Number -->
+    <mat-form-field appearance="outline" class="form-field" subscriptSizing="dynamic">
+      <mat-label>Account Number</mat-label>
+      <input matInput [value]="accountNumber()" (input)="accountNumber.set($any($event.target).value)" placeholder="Full account number (alphanumeric)" />
+    </mat-form-field>
+
+    <!-- Owner -->
+    <mat-form-field appearance="outline" class="form-field" subscriptSizing="dynamic">
+      <mat-label>Owner</mat-label>
+      <input matInput [value]="owner()" (input)="owner.set($any($event.target).value)" placeholder="e.g. John Doe" />
+    </mat-form-field>
+
+    <!-- Sync Mode -->
+    <mat-form-field appearance="outline" class="form-field" subscriptSizing="dynamic">
+      <mat-label>Sync Mode</mat-label>
+      <mat-select [value]="syncMode()" (selectionChange)="syncMode.set($event.value)">
+        <mat-option value="MANUAL">MANUAL (Statement Upload)</mat-option>
+        <mat-option value="AUTOMATED">AUTOMATED (Bank Sync)</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end" class="dialog-actions">
+  <button mat-button class="cancel-btn" (click)="cancel()">Cancel</button>
+  <button mat-raised-button class="submit-btn" (click)="link()">Link Account</button>
+</mat-dialog-actions>

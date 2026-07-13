@@ -1,39 +1,63 @@
 <div class="dashboard-container">
-  
-  <h2 class="page-title">Financial Overview</h2>
 
-  <!-- Summary Cards -->
-  <div class="summary-cards">
-    @for (card of summaryCards; track card.title) {
-      <mat-card class="summary-card">
-        <mat-card-header>
-          <div mat-card-avatar class="card-icon-wrapper" [ngClass]="card.color">
-            <mat-icon>{{card.icon}}</mat-icon>
-          </div>
-          <mat-card-title>{{card.title}}</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="amount">{{card.amount}}</div>
-          <div class="trend" [ngClass]="card.trend.startsWith('+') ? 'positive' : 'negative'">
-            {{card.trend}} vs last month
-          </div>
-        </mat-card-content>
-      </mat-card>
-    }
+  <div class="header-actions">
+    <h2 class="page-title">Financial Overview</h2>
+    <mat-form-field appearance="outline" class="time-range-select">
+      <mat-label>Time Range</mat-label>
+      <mat-select [(value)]="selectedTimeRange" (selectionChange)="onTimeRangeChange($event)">
+        @for (range of timeRanges; track range.value) {
+          <mat-option [value]="range.value">{{range.viewValue}}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
   </div>
 
-  <div class="dashboard-grid">
+  <!-- Financial Summary -->
+  <mat-card class="summary-stats-card">
+    <mat-card-header>
+      <mat-card-title>Financial Summary</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-label">Total Balance</div>
+          <div class="stat-value">{{summaryStats.totalBalance}}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Monthly Income</div>
+          <div class="stat-value income-text">{{summaryStats.monthlyIncome}}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Monthly Expenses</div>
+          <div class="stat-value expense-text">{{summaryStats.monthlyExpenses}}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Number of Accounts</div>
+          <div class="stat-value">{{summaryStats.numberOfAccounts}}</div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="charts-grid">
     <!-- Spending by Category (Pie Chart) -->
     <mat-card class="chart-card">
       <mat-card-header>
         <mat-card-title>Spending by Category</mat-card-title>
       </mat-card-header>
       <mat-card-content class="chart-container">
-        <canvas baseChart
-          [data]="categoryChartData"
-          [options]="categoryChartOptions"
-          [type]="'pie'">
-        </canvas>
+        @if (hasChartData(categoryChartData)) {
+          <canvas baseChart
+            [data]="categoryChartData"
+            [options]="categoryChartOptions"
+            [type]="'pie'">
+          </canvas>
+        } @else {
+          <div class="chart-empty-state" role="status">
+            <mat-icon>pie_chart</mat-icon>
+            <p>No data available</p>
+          </div>
+        }
       </mat-card-content>
     </mat-card>
 
@@ -43,65 +67,79 @@
         <mat-card-title>Spending Trend</mat-card-title>
       </mat-card-header>
       <mat-card-content class="chart-container">
-        <canvas baseChart
-          [data]="trendChartData"
-          [options]="trendChartOptions"
-          [type]="'line'">
-        </canvas>
+        @if (hasChartData(trendChartData)) {
+          <canvas baseChart
+            [data]="trendChartData"
+            [options]="trendChartOptions"
+            [type]="'line'">
+          </canvas>
+        } @else {
+          <div class="chart-empty-state" role="status">
+            <mat-icon>show_chart</mat-icon>
+            <p>No data available</p>
+          </div>
+        }
       </mat-card-content>
     </mat-card>
 
-    <!-- Chart Area -->
+    <!-- Cashflow (Bar Chart) -->
     <mat-card class="chart-card">
       <mat-card-header>
-        <mat-card-title>Monthly Cashflow</mat-card-title>
+        <mat-card-title>Cashflow</mat-card-title>
       </mat-card-header>
       <mat-card-content class="chart-container">
-        <canvas baseChart
-          [data]="cashflowChartData"
-          [options]="cashflowChartOptions"
-          [type]="'bar'">
-        </canvas>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- Recent Transactions Table Area -->
-    <mat-card class="transactions-card">
-      <mat-card-header>
-        <mat-card-title>Recent Transactions</mat-card-title>
-        <button mat-button color="primary" routerLink="/transactions">View All</button>
-      </mat-card-header>
-      <mat-card-content>
-        <table mat-table [dataSource]="recentTransactions" class="transactions-table">
-          <ng-container matColumnDef="date">
-            <th mat-header-cell *matHeaderCellDef> Date </th>
-            <td mat-cell *matCellDef="let element"> {{element.date}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="merchant">
-            <th mat-header-cell *matHeaderCellDef> Merchant </th>
-            <td mat-cell *matCellDef="let element"> {{element.merchant}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="category">
-            <th mat-header-cell *matHeaderCellDef> Category </th>
-            <td mat-cell *matCellDef="let element">
-               <span class="category-chip">{{element.category}}</span>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="amount">
-            <th mat-header-cell *matHeaderCellDef> Amount </th>
-            <td mat-cell *matCellDef="let element" 
-                [ngClass]="{'expense-amount': element.category !== 'Income', 'income-amount': element.category === 'Income'}">
-              {{element.category === 'Income' ? '+' : '-'}} {{element.amount | currency}}
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
+        @if (hasChartData(cashflowChartData)) {
+          <canvas baseChart
+            [data]="cashflowChartData"
+            [options]="cashflowChartOptions"
+            [type]="'bar'">
+          </canvas>
+        } @else {
+          <div class="chart-empty-state" role="status">
+            <mat-icon>bar_chart</mat-icon>
+            <p>No data available</p>
+          </div>
+        }
       </mat-card-content>
     </mat-card>
   </div>
+
+  <!-- Recent Transactions Table Area -->
+  <mat-card class="transactions-card">
+    <mat-card-header>
+      <mat-card-title>Recent Transactions</mat-card-title>
+      <button mat-button color="primary" routerLink="/transactions">View All</button>
+    </mat-card-header>
+    <mat-card-content>
+      <table mat-table [dataSource]="recentTransactions" class="transactions-table">
+        <ng-container matColumnDef="date">
+          <th mat-header-cell *matHeaderCellDef> Date </th>
+          <td mat-cell *matCellDef="let element"> {{element.date}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="merchant">
+          <th mat-header-cell *matHeaderCellDef> Merchant </th>
+          <td mat-cell *matCellDef="let element"> {{element.merchant}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="category">
+          <th mat-header-cell *matHeaderCellDef> Category </th>
+          <td mat-cell *matCellDef="let element">
+             <span class="category-chip">{{element.category}}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="amount">
+          <th mat-header-cell *matHeaderCellDef> Amount </th>
+          <td mat-cell *matCellDef="let element"
+              [ngClass]="{'expense-amount': element.category !== 'Income', 'income-amount': element.category === 'Income'}">
+            {{element.category === 'Income' ? '+' : '-'}} {{element.amount | currency}}
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </mat-card-content>
+  </mat-card>
 </div>

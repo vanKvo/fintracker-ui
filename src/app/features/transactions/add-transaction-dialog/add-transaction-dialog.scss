@@ -1,0 +1,13 @@
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 360px;
+  padding-top: 4px;
+}
+
+.type-group {
+  display: flex;
+  gap: 24px;
+  margin: 4px 0 8px;
+}

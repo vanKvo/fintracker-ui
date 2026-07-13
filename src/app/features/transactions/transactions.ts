@@ -20,8 +20,10 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { SelectionModel } from '@angular/cdk/collections';
 import { TransactionDetailPanel } from './transaction-detail-panel/transaction-detail-panel';
 import { SplitTransactionDialog, SplitResult } from './split-transaction-dialog/split-transaction-dialog';
-import { AddTagDialog } from './add-tag-dialog/add-tag-dialog';
+// import { AddTagDialog } from './add-tag-dialog/add-tag-dialog'; // temporarily disabled — see openAddTagDialog() below
+import { AddTransactionDialog, CreateTransactionResult } from './add-transaction-dialog/add-transaction-dialog';
 import { TransactionService } from '../../core/services/transaction.service';
+import { AccountService, Account } from '../../core/services/account.service';
 import { catchError } from 'rxjs/operators';
 import { forkJoin, of } from 'rxjs';
 
@@ -33,6 +35,8 @@ export interface Transaction {
   account: string;
   amount: number;
   status: 'Pending' | 'Approved' | 'Manual';
+  dbStatus: 'PENDING' | 'POSTED' | 'DELETED';
+  source: 'STATEMENT_UPLOAD' | 'BANK_SYNC' | 'MANUAL_ENTRY';
   tags?: string[];
   notes?: string;
   description?: string;
@@ -69,12 +73,16 @@ export interface Transaction {
   styleUrl: './transactions.scss',
 })
 export class Transactions implements AfterViewInit {
-  displayedColumns: string[] = ['select', 'date', 'merchant', 'account', 'category', 'amount', 'status', 'actions'];
+  // 'tags' column temporarily disabled — see openAddTagDialog() below
+  displayedColumns: string[] = ['select', 'date', 'merchant', 'account', 'category', 'amount', 'status', 'source', 'actions'];
   dataSource = new MatTableDataSource<Transaction>([]);
   selection = new SelectionModel<Transaction>(true, []);
 
   categories: string[] = [];
   accounts: string[] = [];
+  // Full account objects (with accountId) for the Add Transaction dialog's dropdown — distinct
+  // from `accounts` above, which is just distinct account names for the filter toolbar.
+  fullAccounts: Account[] = [];
 
   selectedCategory = 'All';
   selectedAccount = 'All';
@@ -93,11 +101,23 @@ export class Transactions implements AfterViewInit {
 
   constructor(
     private transactionService: TransactionService,
+    private accountService: AccountService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog
   ) {
     this.loadCategories();
+    this.loadFullAccounts();
     this.loadTransactions();
+  }
+
+  // REQ-2.3.1 "Manual Row Insertion": accounts for the Add Transaction dialog's dropdown —
+  // fetched directly rather than derived from transactions, so a user with accounts but zero
+  // transactions yet can still add their first one.
+  private loadFullAccounts() {
+    this.accountService.getAccounts().subscribe({
+      next: (accounts) => this.fullAccounts = accounts,
+      error: () => this.snackBar.open('Failed to load accounts.', 'Dismiss', { duration: 5000 })
+    });
   }
 
   // REQ-2.2 "Inline Row Modification": the category drop-down is the system-defined list from
@@ -275,20 +295,60 @@ export class Transactions implements AfterViewInit {
     });
   }
 
-  // ── REQ-2.2.2 Tag Array Appending ───────────────────────────────────────────
+  // ── REQ-2.2.2 Tag Array Appending — temporarily disabled ────────────────────
+  // Tags column and its "Add tag" menu action are commented out in transactions.html.
+  // Re-enable by uncommenting both there and restoring this method + the AddTagDialog import.
+  //
+  // openAddTagDialog(row: Transaction) {
+  //   const dialogRef = this.dialog.open(AddTagDialog, {
+  //     width: '420px',
+  //     data: { merchant: row.merchant, existingTags: row.tags ?? [] }
+  //   });
+  //
+  //   dialogRef.afterClosed().subscribe((newTags: string[] | undefined) => {
+  //     if (!newTags || newTags.length === 0) return;
+  //
+  //     this.transactionService.appendTags(row.id, newTags).subscribe({
+  //       next: () => this.loadTransactions(),
+  //       error: () => this.snackBar.open('Failed to add tags.', 'Dismiss', { duration: 5000 })
+  //     });
+  //   });
+  // }
 
-  openAddTagDialog(row: Transaction) {
-    const dialogRef = this.dialog.open(AddTagDialog, {
-      width: '420px',
-      data: { merchant: row.merchant, existingTags: row.tags ?? [] }
+  // ── REQ-2.3.1 Manual Row Insertion ──────────────────────────────────────────
+
+  openAddTransactionDialog() {
+    // Refetch rather than reuse the constructor-loaded snapshots: if the initial page-load
+    // fetch failed (e.g. backend was briefly down), `fullAccounts`/`categories` would otherwise
+    // stay empty for the rest of the session with no retry, silently breaking this dialog.
+    forkJoin([
+      this.accountService.getAccounts(),
+      this.transactionService.getCategories()
+    ]).subscribe({
+      next: ([accounts, categories]) => {
+        this.fullAccounts = accounts;
+        this.categories = categories;
+        this.launchAddTransactionDialog();
+      },
+      error: () => this.snackBar.open('Failed to load accounts/categories. Please try again.', 'Dismiss', { duration: 5000 })
+    });
+  }
+
+  private launchAddTransactionDialog() {
+    const dialogRef = this.dialog.open(AddTransactionDialog, {
+      width: '440px',
+      data: { accounts: this.fullAccounts, categories: this.categories }
     });
 
-    dialogRef.afterClosed().subscribe((newTags: string[] | undefined) => {
-      if (!newTags || newTags.length === 0) return;
+    dialogRef.afterClosed().subscribe((result: CreateTransactionResult | undefined) => {
+      if (!result) return;
 
-      this.transactionService.appendTags(row.id, newTags).subscribe({
+      this.transactionService.createTransaction(result).subscribe({
         next: () => this.loadTransactions(),
-        error: () => this.snackBar.open('Failed to add tags.', 'Dismiss', { duration: 5000 })
+        error: (err) => {
+          const message = err?.error?.detail || 'Failed to add transaction.';
+          this.snackBar.open(message, 'Dismiss', { duration: 5000 });
+        }
       });
     });
   }

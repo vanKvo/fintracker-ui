@@ -1,0 +1,242 @@
+.accounts-view {
+  padding: 24px;
+  background-color: var(--color-bg-secondary); // #FAFAFA
+  min-height: calc(100vh - 64px);
+  box-sizing: border-box;
+}
+
+.accounts-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .card-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-text-main);
+    margin: 0;
+    font-family: var(--font-primary);
+  }
+
+  .link-account-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background-color: var(--color-brand-accent); // Gold (#D4AF37)
+    color: var(--color-brand-primary); // Forest green text (#155e37)
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    font-family: var(--font-primary);
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    &:hover {
+      background-color: var(--color-brand-primary); // Forest green background
+      color: #ffffff; // White text
+    }
+  }
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.accounts-table {
+  width: 100%;
+  background: transparent;
+  border-collapse: collapse;
+
+  th.mat-mdc-header-cell {
+    background-color: #f8fafc;
+    color: var(--color-text-muted);
+    font-weight: 700;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    font-family: var(--font-primary);
+  }
+
+  td.mat-mdc-cell {
+    padding: 16px;
+    border-bottom: 1px solid #f1f5f9;
+    color: var(--color-text-main);
+    font-size: 13.5px;
+    font-family: var(--font-primary);
+  }
+
+  .account-name-text {
+    font-weight: 700;
+    color: var(--color-text-main);
+  }
+
+  .account-number {
+    font-family: var(--font-mono); // JetBrains Mono
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  .balance-cell {
+    text-align: right;
+  }
+
+  .balance-text {
+    font-family: var(--font-mono); // JetBrains Mono
+    font-weight: 700;
+    color: var(--color-text-main);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .status-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    .verified-icon {
+      color: #2ecc71; // Emerald green circle check as in mockup
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    .status-text {
+      color: #27ae60;
+      font-weight: 700;
+      font-size: 12.5px;
+    }
+  }
+
+  .sync-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+
+    &.manual {
+      background-color: #f1f5f9;
+      color: #475569;
+    }
+
+    &.automated {
+      background-color: var(--color-success-bg); // Light green tint
+      color: var(--color-success-text);
+    }
+  }
+
+  .table-input {
+    width: 100%;
+    max-width: 180px;
+    height: 32px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    padding: 0 8px;
+    font-size: 13px;
+    outline: none;
+    box-sizing: border-box;
+    font-family: var(--font-primary);
+
+    &:focus {
+      border-color: var(--color-brand-primary);
+      box-shadow: 0 0 0 1px var(--color-brand-primary);
+    }
+  }
+
+  .table-select {
+    width: 100%;
+    max-width: 120px;
+    height: 32px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    padding: 0 8px;
+    font-size: 13px;
+    outline: none;
+    background-color: #ffffff;
+    box-sizing: border-box;
+    font-family: var(--font-primary);
+
+    &:focus {
+      border-color: var(--color-brand-primary);
+    }
+  }
+
+  .actions-cell {
+    text-align: center;
+    white-space: nowrap;
+
+    button {
+      margin: 0 2px;
+    }
+
+    .edit-icon {
+      color: var(--color-text-muted);
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+
+      &:hover {
+        color: var(--color-brand-primary);
+      }
+    }
+
+    .save-icon {
+      color: #27ae60;
+      font-size: 22px;
+      width: 22px;
+      height: 22px;
+    }
+
+    .cancel-icon {
+      color: var(--color-error-text);
+      font-size: 22px;
+      width: 22px;
+      height: 22px;
+    }
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-family: var(--font-primary);
+
+  .empty-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #cbd5e1;
+    margin-bottom: 12px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}

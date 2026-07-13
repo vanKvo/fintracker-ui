@@ -14,6 +14,17 @@ export interface SplitItemPayload {
   category: string;
 }
 
+// REQ-2.3.1 "Manual Row Insertion" — mirrors the Ledger's ManualTransactionRequest. txDate is
+// omitted (not sent as null) to defer to the backend's "defaults to today" behavior.
+export interface CreateTransactionPayload {
+  accountId: string;
+  amount: number;
+  merchant: string;
+  category: string;
+  txDate?: string;
+  type: 'PURCHASE' | 'CREDIT';
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -38,7 +49,9 @@ export class TransactionService {
           account: accountMap.get(t.accountId) || 'Unknown Account',
           description: t.description || '',
           amount: t.amount,
-          status: t.isManual ? 'Manual' : (t.status === 'PENDING_APPROVAL' ? 'Pending' : (t.status === 'POSTED' ? 'Approved' : 'Pending')),
+          status: t.isManual ? 'Manual' : (t.status === 'PENDING' ? 'Pending' : (t.status === 'POSTED' ? 'Approved' : 'Pending')),
+          dbStatus: t.status,
+          source: t.source,
           tags: t.tags || [],
           sourceStatementId: t.statementId,
           isExcluded: !!t.isExcluded,
@@ -50,6 +63,10 @@ export class TransactionService {
 
   getCategories(): Observable<string[]> {
     return this.http.get<string[]>(`${this.apiUrl}/categories`);
+  }
+
+  createTransaction(payload: CreateTransactionPayload): Observable<any> {
+    return this.http.post<any>(this.apiUrl, payload);
   }
 
   approveTransaction(id: string): Observable<any> {

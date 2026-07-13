@@ -7,6 +7,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatDialogModule } from '@angular/material/dialog';
 import { RouterOutlet, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -23,6 +24,7 @@ import { IdleTimerService } from '../../core/services/idle-timer.service';
     MatIconModule,
     MatListModule,
     MatDialogModule,
+    MatMenuModule,
     RouterOutlet,
     RouterModule,
   ],

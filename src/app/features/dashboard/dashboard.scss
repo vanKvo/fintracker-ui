@@ -2,64 +2,72 @@
   padding: 1rem;
 }
 
-.page-title {
-  font-size: 1.5rem;
-  margin-bottom: 2rem;
-  color: var(--text-dark);
-}
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
 
-.summary-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.summary-card {
-  .card-icon-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    color: white;
-
-    &.primary-blue { background-color: var(--primary-blue); }
-    &.status-success { background-color: var(--status-success); }
-    &.status-error { background-color: var(--status-error); }
-    &.status-info { background-color: var(--status-info); }
-  }
-
-  mat-card-title {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin-bottom: 0;
-  }
-
-  .amount {
-    font-size: 1.75rem;
-    font-weight: bold;
+  .page-title {
+    font-size: 1.5rem;
     color: var(--text-dark);
-    margin-top: 0.5rem;
+    margin: 0;
   }
 
-  .trend {
-    font-size: 0.75rem;
-    margin-top: 0.25rem;
-    &.positive { color: var(--status-success); }
-    &.negative { color: var(--status-error); }
+  .time-range-select {
+    width: 200px;
+
+    // Custom Material input styling overrides
+    ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
   }
 }
 
-.dashboard-grid {
+.summary-stats-card {
+  margin-bottom: 1.5rem;
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem 0;
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+
+      .stat-label {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+      }
+
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: var(--text-dark);
+
+        &.income-text { color: var(--status-success); }
+        &.expense-text { color: var(--text-dark); }
+      }
+    }
+  }
+}
+
+.charts-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1.5rem;
-  
+  margin-bottom: 1.5rem;
+
   @media (min-width: 992px) {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   }
+}
+
+.transactions-card {
+  width: 100%;
 }
 
 .chart-card, .transactions-card {
@@ -75,6 +83,29 @@
   position: relative;
   min-height: 250px;
   height: 300px;
+  width: 100%;
+}
+
+.chart-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-secondary);
+
+  mat-icon {
+    font-size: 2.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    opacity: 0.4;
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    font-size: 0.875rem;
+    margin: 0;
+  }
 }
 
 .transactions-table {
