@@ -82,7 +82,7 @@ mat-card-header {
 
 .register-btn {
   background-color: var(--color-brand-accent) !important;
-  color: var(--color-brand-primary) !important;
+  color: #ffffff !important; // Never pair gold/yellow backgrounds with green text
   font-family: inherit;
   font-weight: 600;
   font-size: 0.925rem;

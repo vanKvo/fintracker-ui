@@ -163,7 +163,7 @@
 
     &:hover {
       background-color: var(--color-brand-accent);
-      color: var(--color-brand-primary);
+      color: #ffffff; // Never pair gold/yellow backgrounds with green text
     }
   }
 }
@@ -571,7 +571,7 @@
 
     &:hover {
       background-color: var(--color-brand-accent); // Champagne Gold
-      color: var(--color-brand-primary);
+      color: #ffffff; // Never pair gold/yellow backgrounds with green text
     }
   }
 }

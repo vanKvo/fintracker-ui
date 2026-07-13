@@ -39,7 +39,7 @@
 
   .submit-btn {
     background-color: var(--color-brand-accent) !important; // Gold
-    color: var(--color-brand-primary) !important; // Forest green
+    color: #ffffff !important; // Never pair gold/yellow backgrounds with green text
     font-weight: 700;
     font-family: var(--font-primary);
     transition: all 0.2s ease-in-out;
