@@ -8,10 +8,13 @@
   align-items: center;
   margin-bottom: 2rem;
 
+  // Page title standard (see docs/color_schema/color_schema.md): 20px/700, text-main, Plus Jakarta Sans.
   .page-title {
-    font-size: 1.5rem;
-    color: var(--text-dark);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-text-main);
     margin: 0;
+    font-family: var(--font-primary);
   }
 
   .time-range-select {
@@ -59,18 +62,20 @@
       
       .stat-label {
         font-size: 0.875rem;
-        color: var(--text-secondary);
+        color: var(--color-text-muted);
         margin-bottom: 0.5rem;
       }
-      
+
       .stat-value {
         font-size: 1.5rem;
         font-weight: bold;
-        color: var(--text-dark);
-        
-        &.income-text { color: var(--status-success); }
-        &.expense-text { color: var(--text-dark); }
-        &.savings-text { color: var(--primary-blue); }
+        color: var(--color-text-main);
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+
+        &.income-text { color: var(--color-success-text); }
+        &.expense-text { color: var(--color-text-main); }
+        &.savings-text { color: var(--color-brand-primary); }
       }
     }
   }
