@@ -13,10 +13,13 @@
   align-items: center;
   margin-bottom: 24px;
 
+  // Page title standard (see docs/color_schema/color_schema.md): 20px/700, text-main, Plus Jakarta Sans.
   .page-title {
     margin: 0;
-    font-size: 24px;
-    font-weight: 500;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-text-main);
+    font-family: var(--font-primary);
   }
   
   .header-right {
@@ -37,15 +40,15 @@
   
   .label {
     font-size: 0.9rem;
-    color: #666;
+    color: var(--color-text-muted);
   }
   
   .value {
     font-size: 1.2rem;
     font-weight: bold;
-    
-    &.expense { color: #d32f2f; }
-    &.income { color: #2e7d32; }
+
+    &.expense { color: var(--color-error-text); }
+    &.income { color: var(--color-success-text); }
   }
 }
 
@@ -106,24 +109,41 @@
   }
 }
 
+// Table format standard (see docs/color_schema/color_schema.md): matches the Accounts tab.
 table {
   width: 100%;
   min-width: 1200px;
+
+  th.mat-mdc-header-cell {
+    background-color: #f8fafc;
+    color: var(--color-text-muted);
+    font-weight: 700;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-family: var(--font-primary);
+  }
+
+  td.mat-mdc-cell {
+    color: var(--color-text-main);
+    font-size: 13.5px;
+    font-family: var(--font-primary);
+  }
 }
 
 .transaction-row {
   cursor: pointer;
   transition: background-color 0.2s;
-  
+
   &:hover {
     background-color: #f5f5f5;
   }
-  
+
   &.pending-row {
-    background-color: #fff8e1;
-    
+    background-color: var(--color-warning-bg);
+
     &:hover {
-      background-color: #ffecb3;
+      background-color: #f5e4c3;
     }
   }
 }
@@ -145,16 +165,16 @@ table {
   white-space: nowrap;
 
   &.posted {
-    background: #e8f5e9;
-    color: #2e7d32;
+    background: var(--color-success-bg);
+    color: var(--color-success-text);
   }
   &.pending {
-    background: #fff3e0;
-    color: #e65100;
+    background: var(--color-warning-bg);
+    color: var(--color-warning-text);
   }
   &.deleted {
-    background: #ffebee;
-    color: #c62828;
+    background: var(--color-error-bg);
+    color: var(--color-error-text);
   }
 }
 
@@ -194,10 +214,10 @@ table {
   text-align: right;
 
   &.income {
-    color: #2e7d32;
+    color: var(--color-success-text);
   }
   &.expense {
-    color: #333;
+    color: var(--color-text-main);
   }
 }
 
@@ -266,5 +286,5 @@ th.mat-column-actions, td.mat-column-actions {
 .empty-cell {
   text-align: center;
   padding: 48px;
-  color: #666;
+  color: var(--color-text-muted);
 }
