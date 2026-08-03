@@ -38,6 +38,79 @@ html {
       density: 0,
     )
   );
+
+  // Theme repoint (see docs/color_schema/color_schema.md): $fintracker-primary/secondary above
+  // are Material's own stock palettes, unrelated to the brand tokens. Every Material component
+  // color="primary" (buttons, progress bars, tab indicators, focus rings, checkboxes) reads its
+  // color from these --mat-sys-* system variables via fallback chains, so overriding them once
+  // here repoints all of that to the brand palette without touching each component.
+  --mat-sys-primary: var(--color-brand-primary);
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-tertiary: var(--color-brand-accent);
+  --mat-sys-on-tertiary: #ffffff;
+
+  // Universal text input & dropdown style (see docs/color_schema/color_schema.md) — mirrors the
+  // Statements tab's search box (text inputs) and Filters control (dropdowns/selects). These are
+  // Angular Material's own component tokens, so every mat-form-field/mat-select — existing or
+  // newly added anywhere in the app — picks this up automatically without per-component overrides.
+  --mat-form-field-container-height: 40px;
+  --mat-form-field-container-vertical-padding: 8px;
+  --mat-form-field-container-text-size: 13px;
+  --mat-form-field-outlined-container-shape: 6px;
+  --mat-form-field-outlined-outline-width: 1px;
+  --mat-form-field-outlined-outline-color: #cbd5e1;
+  --mat-form-field-outlined-hover-outline-color: #94a3b8;
+  --mat-form-field-outlined-focus-outline-color: var(--color-brand-primary);
+  --mat-form-field-outlined-label-text-color: var(--color-text-muted);
+  --mat-form-field-outlined-hover-label-text-color: var(--color-text-muted);
+  --mat-form-field-outlined-focus-label-text-color: var(--color-brand-primary);
+  --mat-form-field-outlined-input-text-color: var(--color-text-main);
+  --mat-form-field-outlined-input-text-placeholder-color: #94a3b8;
+  --mat-form-field-enabled-select-arrow-color: var(--color-text-muted);
+  --mat-form-field-focus-select-arrow-color: var(--color-brand-primary);
+
+  --mat-select-enabled-trigger-text-color: var(--color-text-main);
+  --mat-select-trigger-text-size: 13px;
+  --mat-select-trigger-text-weight: 500;
+  --mat-select-placeholder-text-color: #94a3b8;
+  --mat-select-enabled-arrow-color: var(--color-text-muted);
+  --mat-select-focused-arrow-color: var(--color-brand-primary);
+
+  // Dropdown LIST style — the options overlay a mat-select/autocomplete opens. Kept in the same
+  // brand-token family as the trigger above (font/size/colors) so the open panel reads as the
+  // same control instead of a different, Material-default-blue component.
+  --mat-select-panel-background-color: #ffffff;
+  --mat-select-container-elevation-shadow: 0 4px 16px rgba(17, 24, 39, 0.12);
+  --mat-option-label-text-color: var(--color-text-main);
+  --mat-option-label-text-size: 13px;
+  --mat-option-label-text-weight: 500;
+  --mat-option-selected-state-label-text-color: var(--color-brand-primary);
+  --mat-option-selected-state-layer-color: var(--color-success-bg);
+  --mat-option-hover-state-layer-color: #f8fafc;
+  --mat-option-focus-state-layer-color: #f8fafc;
+}
+
+// Material's outlined text-field hardcodes its container height (doesn't read the
+// --mat-form-field-container-height token above), so the token alone doesn't shrink it —
+// force it explicitly, same as the existing per-component overrides this replaces.
+.mat-mdc-form-field-appearance-outline {
+  .mat-mdc-text-field-wrapper {
+    height: 40px !important;
+  }
+
+  .mat-mdc-form-field-flex {
+    height: 40px !important;
+    align-items: center !important;
+  }
+}
+
+// Material hardcodes the select/autocomplete panel's corner radius (no token for it) — match
+// the 6px radius used on the trigger control above, plus a border so the open panel reads as
+// the same bordered-box family instead of Material's plain elevated-card default.
+.mat-mdc-select-panel,
+.mat-mdc-autocomplete-panel {
+  border-radius: 6px !important;
+  border: 1px solid #e2e8f0;
 }
 
 body {
@@ -80,6 +153,82 @@ p, span, a, input, select, textarea,
 .mdc-data-table__cell,
 .mdc-data-table__header-cell {
   font-family: var(--font-primary) !important;
+}
+
+// Shared card + button chrome (see docs/color_schema/color_schema.md, Section 4.A/B) — mirrors
+// the Accounts tab's hand-rolled .accounts-card / .link-account-btn. Use these instead of
+// <mat-card> / stock mat-button so card shape and CTA color/hover stay consistent app-wide,
+// independent of Angular Material's own component defaults and theme palette.
+.data-card {
+  // Without this, a grid/flex item that stretches to fill its track (the default) computes
+  // that width under content-box rules, so the 24px padding + 1px border add on top and the
+  // card overflows its track — e.g. chart cards in a CSS Grid row rendering wider than, and
+  // misaligned with, a plain block sibling like the Recent Transactions card below them.
+  box-sizing: border-box;
+  background-color: var(--color-bg-primary);
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.data-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+// Section-level heading inside a .data-card — a distinct tier from the page-title standard
+// (one per page); uses brand-primary to differentiate, matching Statements' .section-title.
+.section-heading {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-brand-primary);
+  margin: 0;
+  font-family: var(--font-primary);
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--color-brand-primary);
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  font-family: var(--font-primary);
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    background-color: var(--color-brand-accent);
+    color: #ffffff;
+  }
+}
+
+.btn-text {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-family: var(--font-primary);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-text-main);
+  }
 }
 
 // Force monospace on any cell or element showing balance, numbers or account numbers
