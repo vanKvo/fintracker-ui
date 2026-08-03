@@ -10,7 +10,6 @@
       <div class="split-row">
         <mat-form-field appearance="outline" subscriptSizing="dynamic" class="amount-field">
           <mat-label>Amount</mat-label>
-          <span matPrefix>$&nbsp;</span>
           <input matInput type="number" step="0.01" min="0.01"
                  [value]="row.amount ?? ''"
                  (input)="updateAmount($index, $any($event.target).value)">

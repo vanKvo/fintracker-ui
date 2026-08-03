@@ -1,14 +1,14 @@
-<h2 mat-dialog-title>Add Transaction</h2>
-<mat-dialog-content>
-  <div class="form-grid">
-    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+<h2 mat-dialog-title class="dialog-title">Add Transaction</h2>
+<mat-dialog-content class="dialog-content">
+  <div class="form-container">
+    <mat-form-field appearance="outline" class="form-field" subscriptSizing="dynamic">
       <mat-label>Date</mat-label>
       <input matInput [matDatepicker]="picker" [ngModel]="date()" (ngModelChange)="date.set($event)">
       <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
       <mat-datepicker #picker></mat-datepicker>
     </mat-form-field>
 
-    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-form-field appearance="outline" class="form-field" subscriptSizing="dynamic">
       <mat-label>Account</mat-label>
       <mat-select [ngModel]="accountId()" (ngModelChange)="accountId.set($event)">
         @for (account of accounts; track account.accountId) {
@@ -20,12 +20,12 @@
       }
     </mat-form-field>
 
-    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-form-field appearance="outline" class="form-field" subscriptSizing="dynamic">
       <mat-label>Merchant</mat-label>
       <input matInput [ngModel]="merchant()" (ngModelChange)="merchant.set($event)" placeholder="e.g. Whole Foods">
     </mat-form-field>
 
-    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-form-field appearance="outline" class="form-field" subscriptSizing="dynamic">
       <mat-label>Category</mat-label>
       <mat-select [ngModel]="category()" (ngModelChange)="category.set($event)">
         @for (cat of categories; track cat) {
@@ -34,9 +34,8 @@
       </mat-select>
     </mat-form-field>
 
-    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-form-field appearance="outline" class="form-field" subscriptSizing="dynamic">
       <mat-label>Amount</mat-label>
-      <span matPrefix>$&nbsp;</span>
       <input matInput type="number" step="0.01" min="0.01"
              [value]="amount() ?? ''"
              (input)="updateAmount($any($event.target).value)">
@@ -48,7 +47,7 @@
     </mat-radio-group>
   </div>
 </mat-dialog-content>
-<mat-dialog-actions align="end">
-  <button mat-button (click)="cancel()">Cancel</button>
-  <button mat-raised-button color="primary" [disabled]="!canSubmit()" (click)="confirm()">Save</button>
+<mat-dialog-actions align="end" class="dialog-actions">
+  <button mat-button class="cancel-btn" (click)="cancel()">Cancel</button>
+  <button mat-raised-button class="submit-btn" [disabled]="!canSubmit()" (click)="confirm()">Save</button>
 </mat-dialog-actions>

@@ -1,12 +1,12 @@
 import { Component, ViewChild, AfterViewInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatCardModule } from '@angular/material/card';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -22,7 +22,7 @@ import { TransactionDetailPanel } from './transaction-detail-panel/transaction-d
 import { SplitTransactionDialog, SplitResult } from './split-transaction-dialog/split-transaction-dialog';
 // import { AddTagDialog } from './add-tag-dialog/add-tag-dialog'; // temporarily disabled — see openAddTagDialog() below
 import { AddTransactionDialog, CreateTransactionResult } from './add-transaction-dialog/add-transaction-dialog';
-import { TransactionService } from '../../core/services/transaction.service';
+import { TransactionService, UpdateTransactionPayload } from '../../core/services/transaction.service';
 import { AccountService, Account } from '../../core/services/account.service';
 import { catchError } from 'rxjs/operators';
 import { forkJoin, of } from 'rxjs';
@@ -50,13 +50,13 @@ export interface Transaction {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatCardModule,
     MatTabsModule,
     MatIconModule,
     MatButtonModule,
@@ -93,8 +93,12 @@ export class Transactions implements AfterViewInit {
 
   selectedTransaction = signal<Transaction | null>(null);
 
-  // REQ-2.2 "Inline Row Modification": tracks which single cell is being edited in place.
-  editingCell = signal<{ id: string; field: 'category' | 'amount' } | null>(null);
+  // REQ-2.2 "Inline Row Modification" — one row editable at a time, same pattern as the
+  // Accounts tab: an Edit action puts the whole row's editable fields (category, amount; the
+  // only two fields PATCH /transactions/{id} accepts) into inputs, with Save/Cancel to commit.
+  editingTransactionId = signal<string | null>(null);
+  editCategory = '';
+  editAmount = '';
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -244,54 +248,41 @@ export class Transactions implements AfterViewInit {
 
   // ── REQ-2.2.1 Inline Row Modification ──────────────────────────────────────
 
-  isEditing(row: Transaction, field: 'category' | 'amount'): boolean {
-    const editing = this.editingCell();
-    return !!editing && editing.id === row.id && editing.field === field;
+  isEditing(row: Transaction): boolean {
+    return this.editingTransactionId() === row.id;
   }
 
-  startEditCategory(row: Transaction) {
-    if (this.isEditing(row, 'category')) return;
-    this.editingCell.set({ id: row.id, field: 'category' });
+  startEdit(row: Transaction) {
+    this.editingTransactionId.set(row.id);
+    this.editCategory = row.category;
+    this.editAmount = String(row.amount);
   }
 
-  closeCategoryEdit() {
-    this.editingCell.set(null);
+  cancelEdit() {
+    this.editingTransactionId.set(null);
   }
 
-  saveCategory(row: Transaction, category: string) {
-    this.editingCell.set(null);
-    if (!category || category === row.category) return;
-
-    this.transactionService.updateTransaction(row.id, { category }).subscribe({
-      next: () => this.loadTransactions(),
-      error: () => this.snackBar.open('Failed to update category.', 'Dismiss', { duration: 5000 })
-    });
-  }
-
-  startEditAmount(row: Transaction) {
-    if (this.isEditing(row, 'amount')) return;
-    this.editingCell.set({ id: row.id, field: 'amount' });
-  }
-
-  cancelAmountEdit() {
-    this.editingCell.set(null);
-  }
-
-  saveAmount(row: Transaction, rawValue: string) {
-    if (!this.isEditing(row, 'amount')) return;
-
-    const value = Number(rawValue);
-    this.editingCell.set(null);
-
-    if (!Number.isFinite(value) || value === 0) {
+  saveEdit(row: Transaction) {
+    const amountValue = Number(this.editAmount);
+    if (!Number.isFinite(amountValue) || amountValue === 0) {
       this.snackBar.open('Amount must be a non-zero number.', 'Dismiss', { duration: 4000 });
       return;
     }
-    if (value === row.amount) return;
 
-    this.transactionService.updateTransaction(row.id, { amount: value }).subscribe({
+    const payload: UpdateTransactionPayload = {};
+    if (this.editCategory && this.editCategory !== row.category) {
+      payload.category = this.editCategory;
+    }
+    if (amountValue !== row.amount) {
+      payload.amount = amountValue;
+    }
+
+    this.editingTransactionId.set(null);
+    if (Object.keys(payload).length === 0) return;
+
+    this.transactionService.updateTransaction(row.id, payload).subscribe({
       next: () => this.loadTransactions(),
-      error: () => this.snackBar.open('Failed to update amount.', 'Dismiss', { duration: 5000 })
+      error: () => this.snackBar.open('Failed to update transaction.', 'Dismiss', { duration: 5000 })
     });
   }
 
@@ -454,8 +445,12 @@ export class Transactions implements AfterViewInit {
 
   onPanelCategoryChange(category: string) {
     const row = this.selectedTransaction();
-    if (!row) return;
-    this.saveCategory(row, category);
+    if (!row || !category || category === row.category) return;
+
+    this.transactionService.updateTransaction(row.id, { category }).subscribe({
+      next: () => this.loadTransactions(),
+      error: () => this.snackBar.open('Failed to update category.', 'Dismiss', { duration: 5000 })
+    });
     this.selectedTransaction.set({ ...row, category });
   }
 

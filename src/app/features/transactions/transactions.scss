@@ -11,6 +11,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
   margin-bottom: 24px;
 
   // Page title standard (see docs/color_schema/color_schema.md): 20px/700, text-main, Plus Jakarta Sans.
@@ -21,10 +23,11 @@
     color: var(--color-text-main);
     font-family: var(--font-primary);
   }
-  
+
   .header-right {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 16px;
   }
 }
@@ -55,16 +58,17 @@
 .table-card {
   padding: 0;
 
-  mat-card-header {
+  .table-card-header {
+    display: flex;
     flex-direction: column;
     align-items: stretch;
     padding: 16px 24px 0;
   }
 
-  // Matches mat-card-header's 24px horizontal padding so the table's left/right edges
-  // line up with the search toolbar above it, instead of the table stretching to the
-  // full card width while the toolbar sits inset.
-  mat-card-content {
+  // Matches the header's 24px horizontal padding so the table's left/right edges line up
+  // with the search toolbar above it, instead of the table stretching to the full card
+  // width while the toolbar sits inset.
+  .table-card-content {
     padding: 0 24px 24px;
   }
 }
@@ -219,10 +223,6 @@ table {
   &.expense {
     color: var(--color-text-main);
   }
-}
-
-.editable-cell {
-  cursor: text;
 }
 
 .inline-edit-field {
