@@ -1,5 +1,5 @@
 .dialog-title {
-  color: var(--color-brand-primary); // Forest green (#155e37)
+  color: var(--color-text-main);
   font-weight: 700;
   font-size: 18px;
   font-family: var(--font-primary);
@@ -38,14 +38,14 @@
   }
 
   .submit-btn {
-    background-color: var(--color-brand-accent) !important; // Gold
+    background-color: var(--color-brand-primary) !important;
     color: #ffffff !important; // Never pair gold/yellow backgrounds with green text
     font-weight: 700;
     font-family: var(--font-primary);
     transition: all 0.2s ease-in-out;
 
     &:hover {
-      background-color: var(--color-brand-primary) !important;
+      background-color: var(--color-brand-accent) !important; // Gold
       color: #ffffff !important;
     }
   }

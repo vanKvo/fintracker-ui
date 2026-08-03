@@ -37,23 +37,26 @@ export class Accounts implements OnInit {
 
   accounts = signal<Account[]>([]);
   displayedColumns = [
-    'accountName', 
-    'accountNumberLast4', 
-    'accountType', 
-    'owner', 
-    'syncMode', 
-    'currentBalance', 
-    'createdAt', 
-    'status',
+    'accountName',
+    'accountNumber',
+    'accountType',
+    'owner',
+    'syncMode',
+    'createdAt',
     'actions'
   ];
 
   // Inline edit state
   editingAccountId = signal<string | null>(null);
-  
+
+  // Must match ledger.accounts' account_type CHECK constraint (V1__Initial_Schema.sql,
+  // widened by V7__Add_Cash_Account_Type.sql) exactly — any value outside this set is rejected
+  // by the database, not just the application layer.
+  accountTypes = ['CHECKING', 'SAVINGS', 'CREDIT', 'CASH'];
+
   // Temporary form variables for active inline row
   editAccountName = '';
-  editAccountType = '';
+  editAccountType = 'CHECKING';
   editAccountNumber = '';
   editOwner = '';
   editSyncMode: 'MANUAL' | 'AUTOMATED' = 'MANUAL';
@@ -68,7 +71,6 @@ export class Accounts implements OnInit {
         // Fallback for fields in case of new/incomplete database schema
         const mapped = data.map(acc => ({
           ...acc,
-          accountNumberLast4: acc.accountNumberLast4 || '••••',
           owner: acc.owner || 'John Doe',
           syncMode: acc.syncMode || 'MANUAL',
           createdAt: acc.createdAt || new Date().toISOString()
@@ -95,7 +97,7 @@ export class Accounts implements OnInit {
     this.editingAccountId.set(row.accountId);
     this.editAccountName = row.accountName;
     this.editAccountType = row.accountType;
-    this.editAccountNumber = row.accountNumberLast4 || '';
+    this.editAccountNumber = row.accountNumber || '';
     this.editOwner = row.owner || '';
     this.editSyncMode = (row.syncMode as 'MANUAL' | 'AUTOMATED') || 'MANUAL';
   }
@@ -105,8 +107,10 @@ export class Accounts implements OnInit {
   }
 
   saveEdit(row: Account) {
-    // Validate characters as per REQ-3.1.D
-    const alphaNumSpaceHyphenSlash = /^[a-zA-Z0-9\s-/]+$/;
+    // Validate characters as per REQ-3.1.D — must match AccountServiceImpl's
+    // NAME_FIELD_PATTERN/ACCOUNT_NUMBER_PATTERN exactly, so nothing accepted here ever gets
+    // rejected by the backend after the fact.
+    const alphaNumSpaceHyphen = /^[a-zA-Z0-9 -]+$/;
     const alphaNumOnly = /^[a-zA-Z0-9]+$/;
 
     const nameVal = this.editAccountName.trim();
@@ -119,13 +123,18 @@ export class Accounts implements OnInit {
       return;
     }
 
-    if (!alphaNumSpaceHyphenSlash.test(nameVal) || !alphaNumSpaceHyphenSlash.test(typeVal) || !alphaNumSpaceHyphenSlash.test(ownerVal)) {
-      this.snackBar.open('Name, Type, and Owner can only contain letters, numbers, spaces, hyphens, and slashes.', 'Dismiss', { duration: 5000 });
+    if (!alphaNumSpaceHyphen.test(nameVal)) {
+      this.snackBar.open('Account Name can only contain letters, numbers, spaces, and hyphens.', 'Dismiss', { duration: 5000 });
+      return;
+    }
+
+    if (!alphaNumSpaceHyphen.test(ownerVal)) {
+      this.snackBar.open('Owner can only contain letters, numbers, spaces, and hyphens.', 'Dismiss', { duration: 5000 });
       return;
     }
 
     if (numberVal && !alphaNumOnly.test(numberVal)) {
-      this.snackBar.open('Account number can only contain letters and numbers.', 'Dismiss', { duration: 5000 });
+      this.snackBar.open('Account Number can only contain letters and numbers.', 'Dismiss', { duration: 5000 });
       return;
     }
 
@@ -147,7 +156,7 @@ export class Accounts implements OnInit {
     };
 
     // Only send accountNumber if it was edited/changed
-    if (numberVal && numberVal !== row.accountNumberLast4) {
+    if (numberVal && numberVal !== row.accountNumber) {
       payload.accountNumber = numberVal;
     }
 

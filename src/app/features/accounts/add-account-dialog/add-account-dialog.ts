@@ -33,12 +33,20 @@ export class AddAccountDialog {
   private accountService = inject(AccountService);
 
   accountName = signal('');
-  accountType = signal('Checking');
+  accountType = signal('CHECKING');
   accountNumber = signal('');
   owner = signal('John Doe');
   syncMode = signal<'MANUAL' | 'AUTOMATED'>('MANUAL');
 
-  accountTypes = ['Checking', 'Savings', 'Credit Card', 'Investment'];
+  // Must match ledger.accounts' account_type CHECK constraint (V1__Initial_Schema.sql,
+  // widened by V7__Add_Cash_Account_Type.sql) exactly — any value outside this set is rejected
+  // by the database, not just the application layer.
+  accountTypes = [
+    { value: 'CHECKING', label: 'Checking' },
+    { value: 'SAVINGS', label: 'Savings' },
+    { value: 'CREDIT', label: 'Credit' },
+    { value: 'CASH', label: 'Cash' }
+  ];
 
   cancel() {
     this.dialogRef.close(false);
@@ -50,28 +58,36 @@ export class AddAccountDialog {
     const ownerVal = this.owner().trim();
     const numberVal = this.accountNumber().trim();
 
-    if (!nameVal || !typeVal) {
-      this.snackBar.open('Account Name and Account Type are required.', 'Dismiss', { duration: 3000 });
+    // Cash isn't a real bank account, so there's no account number to record for it.
+    const numberRequired = typeVal !== 'CASH';
+
+    if (!nameVal || !typeVal || !ownerVal || (numberRequired && !numberVal)) {
+      const fields = numberRequired
+        ? 'Account Name, Account Type, Account Number and Owner are required.'
+        : 'Account Name, Account Type, and Owner are required.';
+      this.snackBar.open(fields, 'Dismiss', { duration: 3000 });
       return;
     }
 
-    // Alphanumeric constraints: Alphanumeric letters, spaces, hyphens, and dashes/slashes only for Name/Type/Owner.
-    const alphaNumSpaceHyphenSlash = /^[a-zA-Z0-9\s-/]+$/;
+    // REQ-3.1.D: Alphanumeric letters, spaces, and hyphens only for Name/Type/Owner — must match
+    // AccountServiceImpl's NAME_FIELD_PATTERN/ACCOUNT_NUMBER_PATTERN exactly, so nothing accepted
+    // here ever gets rejected by the backend after the fact.
+    const alphaNumSpaceHyphen = /^[a-zA-Z0-9 -]+$/;
     // Alphanumeric only for Account number
     const alphaNumOnly = /^[a-zA-Z0-9]+$/;
 
-    if (!alphaNumSpaceHyphenSlash.test(nameVal)) {
-      this.snackBar.open('Account Name contains invalid characters.', 'Dismiss', { duration: 4000 });
+    if (!alphaNumSpaceHyphen.test(nameVal)) {
+      this.snackBar.open('Account Name can only contain letters, numbers, spaces, and hyphens.', 'Dismiss', { duration: 4000 });
       return;
     }
 
-    if (!alphaNumSpaceHyphenSlash.test(typeVal)) {
-      this.snackBar.open('Account Type contains invalid characters.', 'Dismiss', { duration: 4000 });
+    if (!alphaNumSpaceHyphen.test(typeVal)) {
+      this.snackBar.open('Account Type can only contain letters, numbers, spaces, and hyphens.', 'Dismiss', { duration: 4000 });
       return;
     }
 
-    if (ownerVal && !alphaNumSpaceHyphenSlash.test(ownerVal)) {
-      this.snackBar.open('Owner Name contains invalid characters.', 'Dismiss', { duration: 4000 });
+    if (ownerVal && !alphaNumSpaceHyphen.test(ownerVal)) {
+      this.snackBar.open('Owner can only contain letters, numbers, spaces, and hyphens.', 'Dismiss', { duration: 4000 });
       return;
     }
 

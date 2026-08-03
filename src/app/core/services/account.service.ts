@@ -8,7 +8,7 @@ export interface Account {
   userId: string;
   accountName: string;
   accountType: string;
-  accountNumberLast4?: string;
+  accountNumber?: string;
   owner?: string;
   currentBalance: number;
   syncMode?: string;
