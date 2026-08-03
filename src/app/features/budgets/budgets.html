@@ -1,92 +1,127 @@
 <div class="budgets-container">
   <div class="header-actions">
     <h2 class="page-title">Budgets</h2>
-    <button mat-flat-button color="primary">
-      <mat-icon>add</mat-icon> Create Budget
-    </button>
+    <div class="header-buttons">
+      <button class="action-btn" (click)="openQuickTemplate()">
+        <mat-icon>bolt</mat-icon>
+        <span>Quick Template</span>
+      </button>
+      <button class="action-btn" (click)="manageBudget()">
+        <mat-icon>settings</mat-icon>
+        <span>Manage Budget</span>
+      </button>
+    </div>
   </div>
 
-  <mat-card class="table-card">
-    <mat-card-header>
-      <mat-card-title>Monthly Budget Tracking</mat-card-title>
-    </mat-card-header>
-
-    <mat-card-content>
-      <table mat-table [dataSource]="dataSource" class="mat-elevation-z0 budget-table">
-        
-        <!-- Category Column -->
-        <ng-container matColumnDef="category">
-          <th mat-header-cell *matHeaderCellDef> Category </th>
-          <td mat-cell *matCellDef="let element"> 
-            <span class="category-name">{{element.category}}</span> 
-          </td>
-        </ng-container>
-
-        <!-- Progress Bar Column -->
-        <ng-container matColumnDef="progress">
-          <th mat-header-cell *matHeaderCellDef> Usage </th>
-          <td mat-cell *matCellDef="let element" class="progress-cell"> 
-            <div class="progress-wrapper" 
-                 [class.warning]="isWarning(element.spent, element.allocated)"
-                 [class.danger]="isDanger(element.spent, element.allocated)">
-              <div class="progress-label">
-                <span>{{getPercent(element.spent, element.allocated) | number:'1.0-0'}}%</span>
-              </div>
-              <mat-progress-bar mode="determinate" 
-                [value]="getPercent(element.spent, element.allocated)"
-                [color]="isDanger(element.spent, element.allocated) ? 'warn' : 'primary'">
-              </mat-progress-bar>
+  <div class="budgets-grid">
+    <!-- Column 1: My Budgets -->
+    <div class="my-budgets-column">
+      <h3 class="column-title">My Budgets</h3>
+      <div class="years-list">
+        @for (group of groupedBudgets; track group.year) {
+        <div class="year-group">
+          <h4 class="year-header" (click)="toggleYear(group.year)">
+            <span>{{ group.year }}</span>
+            <mat-icon class="chevron-icon">{{ expandedYears[group.year] ? 'keyboard_arrow_up' : 'keyboard_arrow_down'
+              }}</mat-icon>
+          </h4>
+          @if (expandedYears[group.year]) {
+          <div class="months-list">
+            @for (b of group.budgets; track b.id) {
+            <div class="budget-item" [class.active]="selectedBudget.id === b.id" (click)="selectBudget(b)">
+              <span class="month-label">{{ b.monthName }} {{ b.year }}</span>
+              <span class="status-badge" [class]="b.status.toLowerCase()">{{ b.status }}</span>
             </div>
-          </td>
-        </ng-container>
+            }
+          </div>
+          }
+        </div>
+        }
+      </div>
+    </div>
 
-        <!-- Spent Column -->
-        <ng-container matColumnDef="spent">
-          <th mat-header-cell *matHeaderCellDef> Spent </th>
-          <td mat-cell *matCellDef="let element" class="amount-cell spent-amount">
-            {{element.spent | currency}}
-          </td>
-        </ng-container>
+    <!-- Column 2: Budget Details -->
+    <div class="budget-details-column">
+      <div class="details-header">
+        <div class="title-section">
+          <h3 class="column-title">Budget Details: <span class="highlight">{{ selectedBudget.monthName }} {{
+              selectedBudget.year }}</span></h3>
+        </div>
+        <div class="controls-section">
+          <div class="toggle-pills">
+            <button class="toggle-pill" [class.active]="activeFilter === 'category'" (click)="setFilter('category')">By
+              Category</button>
+            <button class="toggle-pill" [class.active]="activeFilter === 'spendStatus'"
+              (click)="setFilter('spendStatus')">By Spend Status</button>
+          </div>
+          <div class="header-labels">
+            <span class="label-spent">Actual Spent</span>
+            <span class="label-remaining">REMAINING</span>
+          </div>
+        </div>
+      </div>
 
-        <!-- Allocated Column -->
-        <ng-container matColumnDef="allocated">
-          <th mat-header-cell *matHeaderCellDef> Budgeted </th>
-          <td mat-cell *matCellDef="let element" class="amount-cell">
-            {{element.allocated | currency}}
-          </td>
-        </ng-container>
+      <div class="categories-list">
+        @for (line of filteredLines; track line.category) {
+        <div class="category-row">
+          <div class="row-top">
+            <span class="category-name">{{ line.category }}</span>
+            <div class="budget-input-container">
+              <span class="currency-symbol">$</span>
+              <input type="number" [(ngModel)]="line.allocated" class="budget-input financial-value" />
+              <mat-icon class="edit-icon">edit</mat-icon>
+            </div>
+            <span class="spent-value financial-value">{{ line.spent | currency:'USD':'symbol':'1.2-2' }}</span>
+            <span class="remaining-value financial-value" [class.negative]="line.spent > line.allocated"
+              [class.positive]="line.spent <= line.allocated">
+              @if (line.spent > line.allocated) {
+              -{{ (line.spent - line.allocated) | currency:'USD':'':'1.2-2' }}
+              } @else {
+              +{{ (line.allocated - line.spent) | currency:'USD':'':'1.2-2' }}
+              }
+            </span>
+          </div>
+          <div class="row-bottom">
+            <div class="progress-bar-container" [class.warning]="isWarning(line.spent, line.allocated)"
+              [class.danger]="isDanger(line.spent, line.allocated)">
+              <div class="progress-fill" [style.width.%]="getPercent(line.spent, line.allocated)"></div>
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
 
-        <!-- Remaining Column -->
-        <ng-container matColumnDef="remaining">
-          <th mat-header-cell *matHeaderCellDef> Remaining </th>
-          <td mat-cell *matCellDef="let element" class="amount-cell remaining-amount">
-            {{(element.allocated - element.spent) | currency}}
-          </td>
-        </ng-container>
+    <!-- Column 3: Budget Overview -->
+    <div class="budget-overview-column">
+      <h3 class="column-title">Budget Overview</h3>
+      <div class="overview-cards">
+        <!-- Box 1: Total Budgeted -->
+        <div class="overview-card">
+          <span class="card-label">Total Budgeted</span>
+          <span class="card-value financial-value">{{ totalBudgeted | currency:'USD':'symbol':'1.2-2' }}</span>
+        </div>
 
-        <!-- Actions Column -->
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef></th>
-          <td mat-cell *matCellDef="let element" class="actions-cell">
-            <button mat-icon-button [matMenuTriggerFor]="menu">
-              <mat-icon>more_vert</mat-icon>
-            </button>
-            <mat-menu #menu="matMenu">
-              <button mat-menu-item>
-                <mat-icon>edit</mat-icon>
-                <span>Edit Budget</span>
-              </button>
-              <button mat-menu-item class="delete-action">
-                <mat-icon color="warn">delete</mat-icon>
-                <span class="warn-text">Delete</span>
-              </button>
-            </mat-menu>
-          </td>
-        </ng-container>
+        <!-- Box 2: Spent to Date -->
+        <div class="overview-card">
+          <span class="card-label">Spent to Date</span>
+          <span class="card-value financial-value font-medium">-{{ totalSpent | currency:'USD':'symbol':'1.2-2'
+            }}</span>
+        </div>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-      </table>
-    </mat-card-content>
-  </mat-card>
+        <!-- Box 3: Remaining Balance -->
+        <div class="overview-card" [class.danger]="isOverviewOverBudget()">
+          <span class="card-label">Remaining Balance</span>
+          <span class="card-value financial-value" [class.negative]="isOverviewOverBudget()"
+            [class.positive]="!isOverviewOverBudget()">
+            @if (isOverviewOverBudget()) {
+            -{{ (-remainingBalance) | currency:'USD':'symbol':'1.2-2' }}
+            } @else {
+            {{ remainingBalance | currency:'USD':'symbol':'1.2-2' }}
+            }
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
