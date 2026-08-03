@@ -1,12 +1,19 @@
+// Page wrapper standard (see docs/color_schema/color_schema.md, Section 4.A) — matches the
+// Accounts tab's .accounts-view.
 .reports-container {
-  padding: 1rem;
+  padding: 24px;
+  background-color: var(--color-bg-secondary);
+  min-height: calc(100vh - 64px);
+  box-sizing: border-box;
 }
 
 .header-actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
 
   // Page title standard (see docs/color_schema/color_schema.md): 20px/700, text-main, Plus Jakarta Sans.
   .page-title {
@@ -17,9 +24,14 @@
     font-family: var(--font-primary);
   }
 
+  .action-controls {
+    flex-wrap: wrap;
+  }
+
   .time-range-select {
     width: 200px;
-    
+    max-width: 100%;
+
     // Custom Material input styling overrides
     ::ng-deep .mat-mdc-form-field-subscript-wrapper {
       display: none;
@@ -32,21 +44,20 @@
   grid-template-columns: 1fr;
   gap: 1.5rem;
   margin-bottom: 1.5rem;
-  
+
   @media (min-width: 992px) {
     grid-template-columns: 1fr 1fr;
   }
 }
 
-.report-card {
-  mat-card-header {
-    margin-bottom: 1rem;
-  }
-}
-
 .chart-content {
   position: relative;
-  min-height: 300px;
+  min-height: 240px;
+  height: 300px;
+
+  @media (max-width: 600px) {
+    height: 240px;
+  }
 }
 
 .summary-stats-card {

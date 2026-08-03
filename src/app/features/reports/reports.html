@@ -18,58 +18,56 @@
 
   <div class="reports-grid">
     <!-- Spending by Category (Pie Chart) -->
-    <mat-card class="report-card">
-      <mat-card-header>
-        <mat-card-title>Spending by Category</mat-card-title>
-      </mat-card-header>
-      <mat-card-content class="chart-content">
+    <div class="data-card report-card">
+      <div class="data-card-header">
+        <h2 class="section-heading">Spending by Category</h2>
+      </div>
+      <div class="chart-content">
         <canvas baseChart
           [data]="categoryChartData"
           [options]="categoryChartOptions"
           [type]="'pie'">
         </canvas>
-      </mat-card-content>
-    </mat-card>
+      </div>
+    </div>
 
     <!-- Income vs Expenses Trend (Line Chart) -->
-    <mat-card class="report-card">
-      <mat-card-header>
-        <mat-card-title>Cashflow Trend</mat-card-title>
-      </mat-card-header>
-      <mat-card-content class="chart-content">
+    <div class="data-card report-card">
+      <div class="data-card-header">
+        <h2 class="section-heading">Cashflow Trend</h2>
+      </div>
+      <div class="chart-content">
         <canvas baseChart
           [data]="trendChartData"
           [options]="trendChartOptions"
           [type]="'line'">
         </canvas>
-      </mat-card-content>
-    </mat-card>
+      </div>
+    </div>
   </div>
 
   <!-- Summary Stats Area for future implementation -->
-  <mat-card class="summary-stats-card">
-    <mat-card-header>
-      <mat-card-title>Period Summary</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <div class="stats-grid">
-        <div class="stat-item">
-          <div class="stat-label">Total Income</div>
-          <div class="stat-value income-text">$8,450.00</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-label">Total Expenses</div>
-          <div class="stat-value expense-text">$3,240.50</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-label">Net Savings</div>
-          <div class="stat-value savings-text">$5,209.50</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-label">Savings Rate</div>
-          <div class="stat-value">61.6%</div>
-        </div>
+  <div class="data-card summary-stats-card">
+    <div class="data-card-header">
+      <h2 class="section-heading">Period Summary</h2>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-label">Total Income</div>
+        <div class="stat-value income-text">$8,450.00</div>
       </div>
-    </mat-card-content>
-  </mat-card>
+      <div class="stat-item">
+        <div class="stat-label">Total Expenses</div>
+        <div class="stat-value expense-text">$3,240.50</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Net Savings</div>
+        <div class="stat-value savings-text">$5,209.50</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Savings Rate</div>
+        <div class="stat-value">61.6%</div>
+      </div>
+    </div>
+  </div>
 </div>
