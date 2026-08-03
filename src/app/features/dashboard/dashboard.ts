@@ -1,10 +1,7 @@
 import { Component, OnInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { MatGridListModule } from '@angular/material/grid-list';
 import { MatTableModule } from '@angular/material/table';
-import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule, MatSelectChange } from '@angular/material/select';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
@@ -20,11 +17,8 @@ import { of, forkJoin } from 'rxjs';
   selector: 'app-dashboard',
   imports: [
     CommonModule,
-    MatCardModule,
     MatIconModule,
-    MatGridListModule,
     MatTableModule,
-    MatButtonModule,
     MatFormFieldModule,
     MatSelectModule,
     MatSnackBarModule,
