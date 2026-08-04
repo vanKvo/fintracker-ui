@@ -1,0 +1,232 @@
+.dialog-title {
+  color: var(--color-text-main);
+  font-weight: 700;
+  font-size: 18px;
+  font-family: var(--font-primary);
+  margin-bottom: 8px;
+}
+
+.dialog-content {
+  padding-top: 12px !important;
+}
+
+.form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 400px;
+}
+
+.section-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: var(--font-primary);
+  margin-bottom: 8px;
+}
+
+.starter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.starter-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+
+  &:hover {
+    border-color: var(--color-brand-primary);
+  }
+
+  &.selected {
+    border-color: var(--color-brand-primary);
+    background-color: var(--color-bg-secondary);
+  }
+
+  .starter-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .starter-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--color-text-main);
+    font-family: var(--font-primary);
+  }
+
+  .starter-desc {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    font-family: var(--font-primary);
+  }
+}
+
+.period-row {
+  display: flex;
+  gap: 12px;
+
+  .form-field {
+    flex: 1;
+  }
+}
+
+.form-field {
+  width: 100%;
+
+  ::ng-deep {
+    .mat-mdc-text-field-wrapper {
+      background-color: #ffffff !important;
+    }
+  }
+}
+
+.empty-lines-hint {
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+  font-family: var(--font-primary);
+  margin: 0 0 8px;
+}
+
+.lines-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.line-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+
+  .line-category {
+    flex: 1;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--color-text-main);
+    font-family: var(--font-primary);
+  }
+
+  .remove-line-btn {
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    color: var(--color-text-muted);
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    &:hover {
+      color: var(--color-error-text);
+    }
+  }
+}
+
+.line-amount-container {
+  display: flex;
+  align-items: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background-color: #ffffff;
+  height: 34px;
+  padding: 0 8px;
+  width: 110px;
+  box-sizing: border-box;
+
+  .currency-symbol {
+    font-size: 13px;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    margin-right: 2px;
+  }
+
+  .line-amount-input {
+    border: none;
+    outline: none;
+    width: 100%;
+    height: 100%;
+    font-size: 13px;
+    color: var(--color-text-main);
+    padding: 0;
+    background: transparent;
+    font-family: var(--font-mono);
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    &[type=number] {
+      -moz-appearance: textfield;
+    }
+  }
+}
+
+.add-line-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px dashed #e2e8f0;
+
+  .category-field {
+    flex: 1.4;
+  }
+
+  .limit-field {
+    flex: 1;
+  }
+
+  .add-line-btn {
+    margin-top: 6px;
+    color: var(--color-brand-primary);
+    border-color: var(--color-brand-primary);
+    font-weight: 600;
+    font-family: var(--font-primary);
+  }
+}
+
+.dialog-actions {
+  padding: 16px 24px !important;
+  gap: 8px;
+
+  .cancel-btn {
+    color: var(--color-text-muted);
+    font-weight: 600;
+    font-family: var(--font-primary);
+  }
+
+  .submit-btn {
+    background-color: var(--color-brand-primary) !important;
+    color: #ffffff !important;
+    font-weight: 700;
+    font-family: var(--font-primary);
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+      background-color: var(--color-brand-accent) !important;
+      color: #ffffff !important;
+    }
+
+    &:disabled {
+      background-color: #cbd5e1 !important;
+      color: #ffffff !important;
+      cursor: not-allowed;
+    }
+  }
+}

@@ -1,24 +1,23 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { BudgetService, Budget, BudgetLine, BudgetStatus } from '../../core/services/budget.service';
+import { TransactionService } from '../../core/services/transaction.service';
+import { CreateBudgetDialog, CreateBudgetResult } from './create-budget-dialog/create-budget-dialog';
 
-export interface BudgetLine {
-  category: string;
-  allocated: number;
-  spent: number;
-}
-
-export interface MonthlyBudget {
-  id: string;
+export interface MonthOption {
+  key: string;
+  effectiveMonth: string;
   monthName: string;
   month: number;
   year: number;
-  status: 'ACTIVE' | 'CLOSED';
-  lines: BudgetLine[];
+  date: Date;
 }
 
 @Component({
@@ -29,160 +28,193 @@ export interface MonthlyBudget {
     MatProgressBarModule,
     MatButtonModule,
     MatIconModule,
-    MatMenuModule
+    MatMenuModule,
+    MatDialogModule,
+    MatSnackBarModule
   ],
   templateUrl: './budgets.html',
   styleUrl: './budgets.scss',
 })
 export class Budgets implements OnInit {
-  // Static budget dataset
-  budgets: MonthlyBudget[] = [
-    {
-      id: '2026-01',
-      monthName: 'January',
-      month: 1,
-      year: 2026,
-      status: 'ACTIVE',
-      lines: [
-        { category: 'Groceries', allocated: 2200, spent: 850.5 },
-        { category: 'Dining Out', allocated: 150, spent: 120 },
-        { category: 'Utilities Group', allocated: 250, spent: 245 },
-        { category: 'Truing Savings', allocated: 200, spent: 200 },
-        { category: 'Dimtessions', allocated: 120, spent: 110 },
-        { category: 'Prüinary Funds', allocated: 150, spent: 50 }
-      ]
-    },
-    {
-      id: '2025-12',
-      monthName: 'December',
-      month: 12,
-      year: 2025,
-      status: 'CLOSED',
-      lines: [
-        { category: 'Groceries', allocated: 2000, spent: 1950 },
-        { category: 'Dining Out', allocated: 150, spent: 180 },
-        { category: 'Utilities Group', allocated: 250, spent: 260 },
-        { category: 'Truing Savings', allocated: 200, spent: 200 },
-        { category: 'Dimtessions', allocated: 120, spent: 120 },
-        { category: 'Prüinary Funds', allocated: 150, spent: 150 }
-      ]
-    },
-    {
-      id: '2025-11',
-      monthName: 'November',
-      month: 11,
-      year: 2025,
-      status: 'CLOSED',
-      lines: [
-        { category: 'Groceries', allocated: 18250, spent: 3470 },
-        { category: 'Dining Out', allocated: 100, spent: 120 },
-        { category: 'Utilities Group', allocated: 100, spent: 130 },
-        { category: 'Truing Savings', allocated: 150, spent: 120 },
-        { category: 'Dimtessions', allocated: 150, spent: 120 },
-        { category: 'Dining Out', allocated: 100, spent: 120 },
-        { category: 'Prüinary Funds', allocated: 90, spent: 120 }
-      ]
-    },
-    {
-      id: '2025-10',
-      monthName: 'October',
-      month: 10,
-      year: 2025,
-      status: 'CLOSED',
-      lines: [
-        { category: 'Groceries', allocated: 2200, spent: 2100 },
-        { category: 'Dining Out', allocated: 150, spent: 130 },
-        { category: 'Utilities Group', allocated: 250, spent: 280 },
-        { category: 'Truing Savings', allocated: 200, spent: 200 },
-        { category: 'Dimtessions', allocated: 120, spent: 120 },
-        { category: 'Prüinary Funds', allocated: 150, spent: 140 }
-      ]
-    },
-    {
-      id: '2025-09',
-      monthName: 'September',
-      month: 9,
-      year: 2025,
-      status: 'CLOSED',
-      lines: [
-        { category: 'Groceries', allocated: 1800, spent: 2200 },
-        { category: 'Dining Out', allocated: 100, spent: 180 },
-        { category: 'Utilities Group', allocated: 200, spent: 250 },
-        { category: 'Truing Savings', allocated: 100, spent: 100 },
-        { category: 'Dimtessions', allocated: 100, spent: 150 },
-        { category: 'Prüinary Funds', allocated: 100, spent: 120 }
-      ]
-    }
-  ];
-
-  selectedBudget!: MonthlyBudget;
-  activeFilter: 'category' | 'spendStatus' = 'category';
+  // REQ-5.1/5.4 GET /budgets?month= is the only read path the Ledger exposes — there is no
+  // "list my budgets" endpoint (see missing-logic notes). This rolling window is generated
+  // entirely client-side so the left column has something to navigate; it does not reflect which
+  // months actually have a budget until the user clicks into them (see statusByMonth below).
+  monthOptions: MonthOption[] = [];
   expandedYears: { [key: number]: boolean } = {};
 
-  ngOnInit() {
-    // Select November 2025 by default to match the mockup image state
-    const defaultBudget = this.budgets.find(b => b.id === '2025-11');
-    this.selectedBudget = defaultBudget || this.budgets[0];
+  // Populated lazily as the user visits months, since GET is the only source of truth for status
+  // and we deliberately don't prefetch every visible month (that would silently auto-create a
+  // budget row for every month merely rendered in the list — see missing-logic notes).
+  statusByMonth = new Map<string, BudgetStatus>();
 
-    // Only show budgets of the current year and collapse monthly budgets of other years by default
-    const currentYear = 2026;
-    this.groupedBudgets.forEach(group => {
+  selectedMonthOption!: MonthOption;
+  selectedBudget: Budget | null = null;
+  loadingBudget = signal(false);
+
+  categories: string[] = [];
+
+  activeFilter: 'category' | 'spendStatus' = 'category';
+
+  newCategory = signal<string | null>(null);
+  newLimit = signal<number | null>(null);
+
+  constructor(
+    private budgetService: BudgetService,
+    private transactionService: TransactionService,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
+  ) {}
+
+  ngOnInit() {
+    this.monthOptions = this.buildMonthOptions();
+
+    const currentYear = new Date().getFullYear();
+    this.groupedMonths.forEach(group => {
       this.expandedYears[group.year] = group.year === currentYear;
     });
+
+    this.transactionService.getCategories().subscribe({
+      next: (categories) => (this.categories = categories),
+      error: () => this.snackBar.open('Failed to load categories.', 'Dismiss', { duration: 5000 })
+    });
+
+    const currentMonthOption = this.monthOptions.find(o => o.key === this.monthKey(new Date()));
+    this.selectMonth(currentMonthOption ?? this.monthOptions[0]);
   }
 
-  selectBudget(budget: MonthlyBudget) {
-    this.selectedBudget = budget;
+  private buildMonthOptions(): MonthOption[] {
+    const options: MonthOption[] = [];
+    const now = new Date();
+    const cursor = new Date(now.getFullYear(), now.getMonth() - 12, 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + 3, 1);
+
+    while (cursor <= end) {
+      options.push(this.toMonthOption(new Date(cursor)));
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+    return options.sort((a, b) => b.date.getTime() - a.date.getTime());
   }
 
-  setFilter(filter: 'category' | 'spendStatus') {
-    this.activeFilter = filter;
+  private toMonthOption(date: Date): MonthOption {
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    return {
+      key: this.monthKey(date),
+      effectiveMonth: `${year}-${String(month).padStart(2, '0')}-01`,
+      monthName: date.toLocaleString('en-US', { month: 'long' }),
+      month,
+      year,
+      date: new Date(year, date.getMonth(), 1)
+    };
+  }
+
+  private monthKey(date: Date): string {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  /** Inserts a month picked outside the rolling window (e.g. from the Create Budget dialog). */
+  private ensureMonthOption(effectiveMonth: string): MonthOption {
+    const existing = this.monthOptions.find(o => o.effectiveMonth === effectiveMonth);
+    if (existing) return existing;
+
+    const [year, month] = effectiveMonth.split('-').map(Number);
+    const option = this.toMonthOption(new Date(year, month - 1, 1));
+    this.monthOptions = [...this.monthOptions, option].sort((a, b) => b.date.getTime() - a.date.getTime());
+    this.expandedYears[option.year] = true;
+    return option;
+  }
+
+  get groupedMonths() {
+    const groups: { [key: number]: MonthOption[] } = {};
+    this.monthOptions.forEach(o => {
+      if (!groups[o.year]) groups[o.year] = [];
+      groups[o.year].push(o);
+    });
+
+    const sortedYears = Object.keys(groups).map(Number).sort((a, b) => b - a);
+    return sortedYears.map(year => ({
+      year,
+      months: groups[year].sort((a, b) => b.month - a.month)
+    }));
   }
 
   toggleYear(year: number) {
     this.expandedYears[year] = !this.expandedYears[year];
   }
 
-  // Group budgets by year for left panel
-  get groupedBudgets() {
-    const groups: { [key: number]: MonthlyBudget[] } = {};
-    this.budgets.forEach(b => {
-      if (!groups[b.year]) {
-        groups[b.year] = [];
-      }
-      groups[b.year].push(b);
-    });
-
-    const sortedYears = Object.keys(groups)
-      .map(Number)
-      .sort((a, b) => b - a);
-
-    return sortedYears.map(year => ({
-      year,
-      budgets: groups[year].sort((a, b) => b.month - a.month)
-    }));
+  statusFor(option: MonthOption): BudgetStatus | null {
+    return this.statusByMonth.get(option.key) ?? null;
   }
 
-  // Filtered categories to display in the middle column
+  // ── REQ-5.1 / REQ-5.4: load a month's budget ────────────────────────────────
+
+  selectMonth(option: MonthOption) {
+    this.selectedMonthOption = option;
+    this.loadingBudget.set(true);
+
+    this.budgetService.getBudgetForMonth(option.effectiveMonth).subscribe({
+      next: (budget) => {
+        this.selectedBudget = budget;
+        this.statusByMonth.set(option.key, budget.status);
+        this.loadingBudget.set(false);
+      },
+      error: (err) => {
+        this.loadingBudget.set(false);
+        const message = err?.error?.detail || 'Failed to load budget for this month.';
+        this.snackBar.open(message, 'Dismiss', { duration: 5000 });
+      }
+    });
+  }
+
+  private refreshSelectedBudget() {
+    this.budgetService.getBudgetForMonth(this.selectedMonthOption.effectiveMonth).subscribe({
+      next: (budget) => {
+        this.selectedBudget = budget;
+        this.statusByMonth.set(this.selectedMonthOption.key, budget.status);
+      },
+      error: (err) => {
+        const message = err?.error?.detail || 'Failed to refresh budget.';
+        this.snackBar.open(message, 'Dismiss', { duration: 5000 });
+      }
+    });
+  }
+
+  get isClosed(): boolean {
+    return this.selectedBudget?.status === 'CLOSED';
+  }
+
+  setFilter(filter: 'category' | 'spendStatus') {
+    this.activeFilter = filter;
+  }
+
+  // Categories not already on the selected budget — REQ-5.2 "Category Uniqueness" mirrored
+  // client-side so the add-category control never offers a doomed-to-409 choice.
+  get availableCategories(): string[] {
+    const used = new Set((this.selectedBudget?.lines ?? []).map(l => l.category.toLowerCase()));
+    return this.categories.filter(c => !used.has(c.toLowerCase()));
+  }
+
   get filteredLines(): BudgetLine[] {
+    const lines = this.selectedBudget?.lines ?? [];
     if (this.activeFilter === 'spendStatus') {
-      // Sort lines such that overbudget lines are listed first
-      return [...this.selectedBudget.lines].sort((a, b) => {
-        const aOver = a.spent > a.allocated ? 1 : 0;
-        const bOver = b.spent > b.allocated ? 1 : 0;
+      return [...lines].sort((a, b) => {
+        const aOver = (a.spentAmount ?? 0) > a.limitAmount ? 1 : 0;
+        const bOver = (b.spentAmount ?? 0) > b.limitAmount ? 1 : 0;
         return bOver - aOver;
       });
     }
-    return this.selectedBudget.lines;
+    return lines;
   }
 
-  // Calculations for Overview card
+  // ── Overview totals ─────────────────────────────────────────────────────────
+
   get totalBudgeted(): number {
-    return this.selectedBudget.lines.reduce((sum, line) => sum + (line.allocated || 0), 0);
+    return (this.selectedBudget?.lines ?? []).reduce((sum, l) => sum + (l.limitAmount || 0), 0);
   }
 
   get totalSpent(): number {
-    return this.selectedBudget.lines.reduce((sum, line) => sum + (line.spent || 0), 0);
+    return (this.selectedBudget?.lines ?? []).reduce((sum, l) => sum + (l.spentAmount || 0), 0);
   }
 
   get remainingBalance(): number {
@@ -193,29 +225,117 @@ export class Budgets implements OnInit {
     return this.remainingBalance < 0;
   }
 
-  // Calculations for progress and warnings
   getPercent(spent: number, allocated: number): number {
     if (!allocated) return 0;
-    return Math.min((spent / allocated) * 100, 100);
+    return Math.min(((spent || 0) / allocated) * 100, 100);
   }
 
   isWarning(spent: number, allocated: number): boolean {
     if (!allocated) return false;
-    const percent = (spent / allocated) * 100;
+    const percent = ((spent || 0) / allocated) * 100;
     return percent >= 85 && percent < 100;
   }
 
   isDanger(spent: number, allocated: number): boolean {
-    return spent > allocated;
+    return (spent || 0) > allocated;
   }
 
-  // Buttons actions
-  openQuickTemplate() {
-    alert(`Quick Template action triggered for ${this.selectedBudget.monthName} ${this.selectedBudget.year}`);
+  // ── REQ-5.2 granular line-item operations ───────────────────────────────────
+
+  commitLineLimit(line: BudgetLine, rawValue: string) {
+    if (!this.selectedBudget || this.isClosed || !line.lineId) return;
+
+    const value = rawValue === '' ? NaN : Number(rawValue);
+    if (Number.isNaN(value) || value < 0 || value > 999999999.99 || value === line.limitAmount) return;
+
+    this.budgetService.updateLineItemLimit(this.selectedBudget.budgetId, line.lineId, { limitAmount: value }).subscribe({
+      next: () => this.refreshSelectedBudget(),
+      error: (err) => {
+        const message = err?.error?.detail || 'Failed to update category limit.';
+        this.snackBar.open(message, 'Dismiss', { duration: 5000 });
+        this.refreshSelectedBudget(); // revert the input to the persisted value
+      }
+    });
   }
 
-  manageBudget() {
-    alert(`Manage Budget action triggered for ${this.selectedBudget.monthName} ${this.selectedBudget.year}`);
+  removeLine(line: BudgetLine) {
+    if (!this.selectedBudget || !line.lineId) return;
+
+    this.budgetService.removeLineItem(this.selectedBudget.budgetId, line.lineId).subscribe({
+      next: () => this.refreshSelectedBudget(),
+      error: (err) => {
+        const message = err?.error?.detail || 'Failed to remove category.';
+        this.snackBar.open(message, 'Dismiss', { duration: 5000 });
+      }
+    });
+  }
+
+  updateNewLimit(rawValue: string) {
+    this.newLimit.set(rawValue === '' ? null : Number(rawValue));
+  }
+
+  addLine() {
+    if (!this.selectedBudget) return;
+    const category = this.newCategory();
+    if (!category) return;
+
+    this.budgetService.addLineItem(this.selectedBudget.budgetId, { category, limitAmount: this.newLimit() ?? 0 }).subscribe({
+      next: () => {
+        this.newCategory.set(null);
+        this.newLimit.set(null);
+        this.refreshSelectedBudget();
+      },
+      error: (err) => {
+        const message = err?.error?.detail || 'Failed to add category.';
+        this.snackBar.open(message, 'Dismiss', { duration: 5000 });
+      }
+    });
+  }
+
+  // ── REQ-5.1 lifecycle: close / reopen ───────────────────────────────────────
+
+  toggleBudgetStatus() {
+    if (!this.selectedBudget) return;
+
+    const action$ = this.selectedBudget.status === 'ACTIVE'
+      ? this.budgetService.closeBudget(this.selectedBudget.budgetId)
+      : this.budgetService.reopenBudget(this.selectedBudget.budgetId);
+
+    action$.subscribe({
+      next: (budget) => {
+        this.selectedBudget = budget;
+        this.statusByMonth.set(this.selectedMonthOption.key, budget.status);
+      },
+      error: (err) => {
+        const message = err?.error?.detail || 'Failed to update budget status.';
+        this.snackBar.open(message, 'Dismiss', { duration: 5000 });
+      }
+    });
+  }
+
+  // ── REQ-5.1 create ───────────────────────────────────────────────────────────
+
+  openCreateBudgetDialog() {
+    const dialogRef = this.dialog.open(CreateBudgetDialog, {
+      width: '480px',
+      data: { categories: this.categories, defaultMonth: this.selectedMonthOption?.date ?? new Date() }
+    });
+
+    dialogRef.afterClosed().subscribe((result: CreateBudgetResult | undefined) => {
+      if (!result) return;
+
+      this.budgetService.upsertBudget({ effectiveMonth: result.effectiveMonth, lines: result.lines }).subscribe({
+        next: (budget) => {
+          const option = this.ensureMonthOption(result.effectiveMonth);
+          this.selectedMonthOption = option;
+          this.selectedBudget = budget;
+          this.statusByMonth.set(option.key, budget.status);
+        },
+        error: (err) => {
+          const message = err?.error?.detail || 'Failed to create budget.';
+          this.snackBar.open(message, 'Dismiss', { duration: 5000 });
+        }
+      });
+    });
   }
 }
-

@@ -2,13 +2,13 @@
   <div class="header-actions">
     <h2 class="page-title">Budgets</h2>
     <div class="header-buttons">
-      <button class="action-btn" (click)="openQuickTemplate()">
+      <button class="action-btn" (click)="openCreateBudgetDialog()">
         <mat-icon>bolt</mat-icon>
         <span>Quick Template</span>
       </button>
-      <button class="action-btn" (click)="manageBudget()">
-        <mat-icon>settings</mat-icon>
-        <span>Manage Budget</span>
+      <button class="action-btn" (click)="openCreateBudgetDialog()">
+        <mat-icon>add</mat-icon>
+        <span>Create Budget</span>
       </button>
     </div>
   </div>
@@ -18,7 +18,7 @@
     <div class="my-budgets-column">
       <h3 class="column-title">My Budgets</h3>
       <div class="years-list">
-        @for (group of groupedBudgets; track group.year) {
+        @for (group of groupedMonths; track group.year) {
         <div class="year-group">
           <h4 class="year-header" (click)="toggleYear(group.year)">
             <span>{{ group.year }}</span>
@@ -27,10 +27,12 @@
           </h4>
           @if (expandedYears[group.year]) {
           <div class="months-list">
-            @for (b of group.budgets; track b.id) {
-            <div class="budget-item" [class.active]="selectedBudget.id === b.id" (click)="selectBudget(b)">
-              <span class="month-label">{{ b.monthName }} {{ b.year }}</span>
-              <span class="status-badge" [class]="b.status.toLowerCase()">{{ b.status }}</span>
+            @for (o of group.months; track o.key) {
+            <div class="budget-item" [class.active]="selectedMonthOption.key === o.key" (click)="selectMonth(o)">
+              <span class="month-label">{{ o.monthName }} {{ o.year }}</span>
+              @if (statusFor(o); as status) {
+              <span class="status-badge" [class]="status.toLowerCase()">{{ status }}</span>
+              }
             </div>
             }
           </div>
@@ -42,10 +44,20 @@
 
     <!-- Column 2: Budget Details -->
     <div class="budget-details-column">
+      @if (loadingBudget()) {
+      <mat-progress-bar mode="indeterminate" class="loading-bar"></mat-progress-bar>
+      }
+
       <div class="details-header">
         <div class="title-section">
-          <h3 class="column-title">Budget Details: <span class="highlight">{{ selectedBudget.monthName }} {{
-              selectedBudget.year }}</span></h3>
+          <h3 class="column-title">Budget Details: <span class="highlight">{{ selectedMonthOption.monthName }} {{
+              selectedMonthOption.year }}</span></h3>
+          @if (selectedBudget) {
+          <button class="status-action-btn" [class.closed]="isClosed" (click)="toggleBudgetStatus()">
+            <mat-icon>{{ isClosed ? 'lock_open' : 'lock' }}</mat-icon>
+            <span>{{ isClosed ? 'Reopen Budget' : 'Close Budget' }}</span>
+          </button>
+          }
         </div>
         <div class="controls-section">
           <div class="toggle-pills">
@@ -61,32 +73,62 @@
         </div>
       </div>
 
+      @if (isClosed) {
+      <p class="closed-hint">This budget is CLOSED — reopen it to make changes.</p>
+      }
+
       <div class="categories-list">
-        @for (line of filteredLines; track line.category) {
+        @for (line of filteredLines; track line.lineId) {
         <div class="category-row">
           <div class="row-top">
             <span class="category-name">{{ line.category }}</span>
-            <div class="budget-input-container">
+            <div class="budget-input-container" [class.disabled]="isClosed">
               <span class="currency-symbol">$</span>
-              <input type="number" [(ngModel)]="line.allocated" class="budget-input financial-value" />
+              <input type="number" step="0.01" min="0" max="999999999.99" class="budget-input financial-value"
+                [value]="line.limitAmount" [disabled]="isClosed"
+                (change)="commitLineLimit(line, $any($event.target).value)" />
               <mat-icon class="edit-icon">edit</mat-icon>
             </div>
-            <span class="spent-value financial-value">{{ line.spent | currency:'USD':'symbol':'1.2-2' }}</span>
-            <span class="remaining-value financial-value" [class.negative]="line.spent > line.allocated"
-              [class.positive]="line.spent <= line.allocated">
-              @if (line.spent > line.allocated) {
-              -{{ (line.spent - line.allocated) | currency:'USD':'':'1.2-2' }}
+            <span class="spent-value financial-value">{{ (line.spentAmount || 0) | currency:'USD':'symbol':'1.2-2' }}</span>
+            <span class="remaining-value financial-value" [class.negative]="(line.spentAmount || 0) > line.limitAmount"
+              [class.positive]="(line.spentAmount || 0) <= line.limitAmount">
+              @if ((line.spentAmount || 0) > line.limitAmount) {
+              -{{ ((line.spentAmount || 0) - line.limitAmount) | currency:'USD':'':'1.2-2' }}
               } @else {
-              +{{ (line.allocated - line.spent) | currency:'USD':'':'1.2-2' }}
+              +{{ (line.limitAmount - (line.spentAmount || 0)) | currency:'USD':'':'1.2-2' }}
               }
             </span>
+            @if (!isClosed) {
+            <button mat-icon-button class="remove-line-btn" (click)="removeLine(line)" aria-label="Remove category">
+              <mat-icon>close</mat-icon>
+            </button>
+            }
           </div>
           <div class="row-bottom">
-            <div class="progress-bar-container" [class.warning]="isWarning(line.spent, line.allocated)"
-              [class.danger]="isDanger(line.spent, line.allocated)">
-              <div class="progress-fill" [style.width.%]="getPercent(line.spent, line.allocated)"></div>
+            <div class="progress-bar-container" [class.warning]="isWarning(line.spentAmount || 0, line.limitAmount)"
+              [class.danger]="isDanger(line.spentAmount || 0, line.limitAmount)">
+              <div class="progress-fill" [style.width.%]="getPercent(line.spentAmount || 0, line.limitAmount)"></div>
             </div>
           </div>
+        </div>
+        }
+
+        @if (!isClosed && selectedBudget) {
+        <div class="add-line-row">
+          <select class="add-line-select" [ngModel]="newCategory()" (ngModelChange)="newCategory.set($event)">
+            <option [ngValue]="null" disabled>Add a category…</option>
+            @for (cat of availableCategories; track cat) {
+            <option [ngValue]="cat">{{ cat }}</option>
+            }
+          </select>
+          <div class="budget-input-container">
+            <span class="currency-symbol">$</span>
+            <input type="number" step="0.01" min="0" class="budget-input financial-value" placeholder="0.00"
+              [value]="newLimit() ?? ''" (input)="updateNewLimit($any($event.target).value)" />
+          </div>
+          <button class="add-line-btn" [disabled]="!newCategory()" (click)="addLine()">
+            <mat-icon>add</mat-icon>
+          </button>
         </div>
         }
       </div>
