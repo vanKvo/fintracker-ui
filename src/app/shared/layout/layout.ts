@@ -11,8 +11,10 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDialogModule } from '@angular/material/dialog';
 import { RouterOutlet, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { catchError, of } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { IdleTimerService } from '../../core/services/idle-timer.service';
+import { ProfileService } from '../../core/services/profile.service';
 
 @Component({
   selector: 'app-layout',
@@ -35,13 +37,24 @@ export class Layout implements OnInit, OnDestroy {
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly authService = inject(AuthService);
   private readonly idleTimer = inject(IdleTimerService);
+  private readonly profileService = inject(ProfileService);
 
   isHandset$: Observable<boolean> = this.breakpointObserver
     .observe(Breakpoints.Handset)
     .pipe(map((result) => result.matches), shareReplay());
 
+  /** Falls back to this if the profile service is slow/unreachable — never blocks the page. */
+  displayName = 'Account';
+
   ngOnInit(): void {
     this.idleTimer.start();
+    this.profileService.getProfile().pipe(
+      catchError(() => of(null))
+    ).subscribe(profile => {
+      if (profile) {
+        this.displayName = `${profile.firstName} ${profile.lastName}`.trim() || 'Account';
+      }
+    });
   }
 
   ngOnDestroy(): void {
