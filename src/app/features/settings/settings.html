@@ -19,8 +19,8 @@
               <mat-icon>person</mat-icon>
             </div>
             <div class="profile-info">
-              <h3>Alex Morgan</h3>
-              <p>Pro Member</p>
+              <h3>{{ profileForm.value.firstName }} {{ profileForm.value.lastName }}</h3>
+              <p>{{ subscriptionTier === 'PREMIUM' ? 'Premium Member' : 'Free Member' }}</p>
               <button mat-button color="primary">Change Avatar</button>
             </div>
           </div>
@@ -126,6 +126,18 @@
               </button>
             </div>
           </form>
+        </div>
+      </mat-tab>
+
+      <!-- Categories Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">sell</mat-icon>
+          Categories
+        </ng-template>
+
+        <div class="tab-content">
+          <app-manage-categories></app-manage-categories>
         </div>
       </mat-tab>
 

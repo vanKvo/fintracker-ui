@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -9,7 +9,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDivider } from '@angular/material/divider';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ProfileService } from '../../core/services/profile.service';
+import { ManageCategories } from './manage-categories/manage-categories';
 
 @Component({
   selector: 'app-settings',
@@ -24,21 +27,28 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
     MatTabsModule,
     MatSlideToggleModule,
     MatDivider,
-    ReactiveFormsModule
+    MatSnackBarModule,
+    ReactiveFormsModule,
+    ManageCategories
   ],
   templateUrl: './settings.html',
   styleUrl: './settings.scss',
 })
-export class Settings {
+export class Settings implements OnInit {
+  private readonly profileService = inject(ProfileService);
+  private readonly snackBar = inject(MatSnackBar);
+
   profileForm: FormGroup;
   preferencesForm: FormGroup;
+  subscriptionTier = '';
 
   constructor(private fb: FormBuilder) {
+    // Empty until the real profile loads — no fabricated placeholder name/email.
     this.profileForm = this.fb.group({
-      firstName: ['Alex', Validators.required],
-      lastName: ['Morgan', Validators.required],
-      email: ['alex.morgan@example.com', [Validators.required, Validators.email]],
-      phone: ['+1 (555) 123-4567']
+      firstName: ['', Validators.required],
+      lastName: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      phone: ['']
     });
 
     this.preferencesForm = this.fb.group({
@@ -47,6 +57,23 @@ export class Settings {
       emailNotifications: [true],
       smsNotifications: [false],
       marketingEmails: [false]
+    });
+  }
+
+  ngOnInit(): void {
+    this.profileService.getProfile().subscribe({
+      next: profile => {
+        this.profileForm.patchValue({
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          email: profile.email
+        });
+        this.subscriptionTier = profile.subscriptionTier;
+      },
+      error: err => {
+        const message = err?.error?.detail || 'Failed to load your profile.';
+        this.snackBar.open(message, 'Dismiss', { duration: 5000 });
+      }
     });
   }
 
