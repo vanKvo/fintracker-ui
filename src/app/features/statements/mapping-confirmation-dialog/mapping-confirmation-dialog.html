@@ -1,0 +1,34 @@
+<h2 mat-dialog-title>Confirm Column Mapping</h2>
+<mat-dialog-content>
+  <p class="intro">
+    @if (data.proposal.isKnownBank) {
+      We matched most columns automatically — please review before importing.
+    } @else {
+      We don't have a saved mapping for this bank yet. Match each field below and we'll remember it next time.
+    }
+  </p>
+
+  <div class="mapping-grid">
+    @for (field of fields; track field) {
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>{{ fieldLabels[field] }}</mat-label>
+        <mat-select [ngModel]="selections()[field]" (ngModelChange)="setSelection(field, $event)">
+          @for (col of allColumns(); track col) {
+            <mat-option [value]="col">{{ col }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
+  </div>
+
+  @if (data.proposal.unmappedColumns.length) {
+    <div class="unmapped-columns">
+      <mat-icon>info</mat-icon>
+      <span>Unused columns in this file: {{ data.proposal.unmappedColumns.join(', ') }}</span>
+    </div>
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel Import</button>
+  <button mat-raised-button color="primary" [disabled]="!canConfirm()" (click)="confirm()">Confirm &amp; Import</button>
+</mat-dialog-actions>

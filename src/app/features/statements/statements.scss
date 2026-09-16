@@ -258,6 +258,78 @@
   }
 }
 
+// Empty/error states — same pattern as Budgets and Dashboard (docs/color_schema/color_schema.md):
+// failure is styled distinctly from emptiness so a load error is never mistaken for "nothing here yet".
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 32px 16px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  background-color: var(--color-bg-secondary);
+
+  &.error {
+    border-color: #e7b8b5;
+    background-color: var(--color-error-bg);
+
+    .empty-icon {
+      color: var(--color-error-text);
+    }
+  }
+
+  .empty-icon {
+    font-size: 34px;
+    width: 34px;
+    height: 34px;
+    color: #cbd5e1;
+    margin-bottom: 10px;
+  }
+
+  .empty-title {
+    font-family: var(--font-primary);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text-main);
+    margin: 0 0 6px;
+  }
+
+  .empty-hint {
+    font-family: var(--font-primary);
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--color-text-muted);
+    margin: 0 0 16px;
+  }
+
+  .empty-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--color-brand-primary);
+    color: #ffffff;
+    font-family: var(--font-primary);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: var(--color-brand-accent);
+    }
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+}
+
 .statement-card {
   background-color: #ffffff;
   border: 1px solid #e2e8f0;

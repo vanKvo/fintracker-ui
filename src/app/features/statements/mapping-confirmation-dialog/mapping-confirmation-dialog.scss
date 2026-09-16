@@ -1,0 +1,29 @@
+.intro {
+  color: var(--mat-sys-on-surface-variant, #666);
+  margin-bottom: 1rem;
+}
+
+.mapping-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.unmapped-columns {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--mat-sys-on-surface-variant, #666);
+  margin-top: 0.5rem;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}

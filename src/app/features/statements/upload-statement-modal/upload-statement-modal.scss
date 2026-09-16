@@ -43,3 +43,72 @@
     color: #999;
   }
 }
+
+.date-range {
+  display: flex;
+  gap: 16px;
+
+  mat-form-field {
+    flex: 1;
+  }
+}
+
+.progress-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 32px 16px;
+  text-align: center;
+
+  .hint {
+    font-size: 0.85rem;
+    color: #888;
+  }
+
+  &.success mat-icon {
+    color: #2e7d32;
+    font-size: 48px;
+    height: 48px;
+    width: 48px;
+  }
+
+  &.error mat-icon {
+    color: #c62828;
+    font-size: 48px;
+    height: 48px;
+    width: 48px;
+  }
+}
+
+.field-error {
+  color: #b3261e;
+  font-size: 0.8125rem;
+  margin: -8px 0 8px;
+}
+
+/* REQ-STMT-08: the matched statement's details inside the error panel. */
+.existing-statement {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-top: 12px;
+  text-align: left;
+
+  .row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 0.875rem;
+  }
+
+  .label {
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  .value {
+    font-weight: 500;
+  }
+}

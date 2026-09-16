@@ -46,11 +46,33 @@
     <div class="statements-list-column">
       <h2 class="section-title">Bank Statements</h2>
 
+      @if (loadFailed()) {
+        <div class="empty-state error">
+          <mat-icon class="empty-icon">cloud_off</mat-icon>
+          <p class="empty-title">Couldn't load your statements</p>
+          <p class="empty-hint">The statements service didn't respond.</p>
+          <button class="empty-action-btn" (click)="loadStatements()">
+            <mat-icon>refresh</mat-icon>
+            <span>Try Again</span>
+          </button>
+        </div>
+      } @else if (!loading() && statementsList().length === 0) {
+        <div class="empty-state">
+          <mat-icon class="empty-icon">description</mat-icon>
+          <p class="empty-title">No statements yet</p>
+          <p class="empty-hint">Upload a bank statement to start importing transactions.</p>
+          <button class="empty-action-btn" (click)="openUploadModal()">
+            <mat-icon>add</mat-icon>
+            <span>Upload Statement</span>
+          </button>
+        </div>
+      } @else if (!loading()) {
+
       <!-- RECENT Category -->
-      @if (getGroupedStatements('recent').length > 0) {
+      @if (recentStatements().length > 0) {
       <div class="category-group">
         <div class="category-header">RECENT</div>
-        @for (stmt of getGroupedStatements('recent'); track stmt.id) {
+        @for (stmt of recentStatements(); track stmt.id) {
         <div class="statement-card" [class.active]="selectedStatementId() === stmt.id"
           (click)="selectStatement(stmt.id)">
           <div class="card-title">{{ stmt.account }} ({{ stmt.period }})</div>
@@ -71,11 +93,11 @@
       </div>
       }
 
-      <!-- PRIOR Category -->
-      @if (getGroupedStatements('prior').length > 0) {
+      <!-- PRIOR Category: rest of the current calendar year -->
+      @if (priorStatements().length > 0) {
       <div class="category-group">
         <div class="category-header">PRIOR</div>
-        @for (stmt of getGroupedStatements('prior'); track stmt.id) {
+        @for (stmt of priorStatements(); track stmt.id) {
         <div class="statement-card" [class.active]="selectedStatementId() === stmt.id"
           (click)="selectStatement(stmt.id)">
           <div class="card-title">{{ stmt.account }} ({{ stmt.period }})</div>
@@ -96,16 +118,18 @@
       </div>
       }
 
-      <!-- Collapsible PRIOR 2025 Category -->
+      <!-- One collapsible section per past year actually present in the data, instead of two
+           hardcoded years that would silently drop anything older. -->
+      @for (year of priorYears(); track year) {
       <div class="category-group">
-        <div class="collapsible-header" (click)="togglePrior2025()">
-          <span>2025</span>
-          <mat-icon>{{ prior2025Expanded() ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}</mat-icon>
+        <div class="collapsible-header" (click)="toggleYear(year)">
+          <span>{{ year }}</span>
+          <mat-icon>{{ isYearExpanded(year) ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}</mat-icon>
         </div>
 
-        @if (prior2025Expanded()) {
+        @if (isYearExpanded(year)) {
         <div class="collapsible-content">
-          @for (stmt of getGroupedStatements('prior-2025'); track stmt.id) {
+          @for (stmt of getStatementsForYear(year); track stmt.id) {
           <div class="statement-card" [class.active]="selectedStatementId() === stmt.id"
             (click)="selectStatement(stmt.id)">
             <div class="card-title">{{ stmt.account }} ({{ stmt.period }})</div>
@@ -114,45 +138,17 @@
               <span class="card-transactions">{{ stmt.transactions }} transactions</span>
             </div>
             <div class="card-footer-row">
-              <span class="status-badge success">APPROVED</span>
+              <span class="status-badge" [class]="stmt.status === 'Needs Attention' ? 'warning' : 'success'">
+                {{ stmt.status === 'Needs Attention' ? 'REVIEW NEEDED (' + stmt.pending + ' Pending)' : 'APPROVED' }}
+              </span>
             </div>
           </div>
-          }
-          @if (getGroupedStatements('prior-2025').length === 0) {
-          <div class="no-statements-text">No statements for 2025.</div>
           }
         </div>
         }
       </div>
-
-      <!-- Collapsible 2024 (Expanded) Category -->
-      <div class="category-group">
-        <div class="collapsible-header" (click)="togglePrior2024()">
-          <span>2024</span>
-          <mat-icon>{{ prior2024Expanded() ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}</mat-icon>
-        </div>
-
-        @if (prior2024Expanded()) {
-        <div class="collapsible-content">
-          @for (stmt of getGroupedStatements('prior-2024'); track stmt.id) {
-          <div class="statement-card" [class.active]="selectedStatementId() === stmt.id"
-            (click)="selectStatement(stmt.id)">
-            <div class="card-title">{{ stmt.account }} ({{ stmt.period }})</div>
-            <div class="card-row">
-              <span class="card-label">Period: {{ stmt.period }}</span>
-              <span class="card-transactions">{{ stmt.transactions }} transactions</span>
-            </div>
-            <div class="card-footer-row">
-              <span class="status-badge success">APPROVED</span>
-            </div>
-          </div>
-          }
-          @if (getGroupedStatements('prior-2024').length === 0) {
-          <div class="no-statements-text">No statements for 2024.</div>
-          }
-        </div>
-        }
-      </div>
+      }
+      }
     </div>
 
     <!-- Right Column: Detail Panel -->

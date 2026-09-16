@@ -1,25 +1,130 @@
 <h2 mat-dialog-title>Upload Statement</h2>
 <mat-dialog-content>
-  <div class="upload-form">
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Select Account</mat-label>
-      <mat-select [ngModel]="selectedAccount()" (ngModelChange)="selectedAccount.set($event)">
-        @for (acc of accounts; track acc) {
-          <mat-option [value]="acc">{{ acc }}</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
 
-    <div class="file-upload-container">
-      <input type="file" id="statementFile" (change)="onFileSelected($event)" accept=".pdf,.csv" class="file-input">
-      <label for="statementFile" class="file-label">
-        <mat-icon>cloud_upload</mat-icon>
-        <span>{{ selectedFile() ? selectedFile()?.name : 'Choose a file or drop it here (.pdf, .csv)' }}</span>
-      </label>
-    </div>
-  </div>
+  @switch (stage()) {
+
+    @case ('form') {
+      <div class="upload-form">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Document Type</mat-label>
+          <mat-select [ngModel]="sourceFormat()" (ngModelChange)="onDocumentTypeChange($event)">
+            @for (opt of documentTypeOptions; track opt.value) {
+              <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        @if (sourceFormat()) {
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Account</mat-label>
+            <mat-select [ngModel]="selectedAccountId()" (ngModelChange)="selectedAccountId.set($event)">
+              @for (acc of accounts(); track acc.accountId) {
+                <mat-option [value]="acc.accountId">{{ acc.accountName }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          @if (isCsv()) {
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Bank Institution</mat-label>
+              <mat-select [ngModel]="selectedBankId()" (ngModelChange)="selectedBankId.set($event)">
+                @for (bank of banks; track bank.id) {
+                  <mat-option [value]="bank.id">{{ bank.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          }
+
+          <!-- REQ-STMT-07: collected for every format. The statement is filed under the month
+               its closing date falls in, so no separate month field is needed. -->
+          <div class="date-range">
+            <mat-form-field appearance="outline">
+              <mat-label>Statement Opening Date</mat-label>
+              <input matInput type="date" [ngModel]="openingDate()" (ngModelChange)="openingDate.set($event)" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Statement Closing Date</mat-label>
+              <input matInput type="date" [ngModel]="closingDate()" (ngModelChange)="closingDate.set($event)" />
+            </mat-form-field>
+          </div>
+          @if (dateRangeInvalid()) {
+            <p class="field-error">The closing date cannot be before the opening date.</p>
+          }
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Description (optional)</mat-label>
+            <input matInput [ngModel]="description()" (ngModelChange)="description.set($event)" />
+          </mat-form-field>
+
+          <div class="file-upload-container">
+            <input
+              type="file"
+              id="statementFile"
+              (change)="onFileSelected($event)"
+              [accept]="acceptTypes()"
+              class="file-input"
+            />
+            <label for="statementFile" class="file-label">
+              <mat-icon>cloud_upload</mat-icon>
+              <span>{{ selectedFile() ? selectedFile()?.name : 'Choose a file or drop it here (' + acceptTypes() + ')' }}</span>
+            </label>
+          </div>
+        }
+      </div>
+    }
+
+    @case ('uploading') {
+      <div class="progress-state">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>{{ statusMessage() }}</p>
+      </div>
+    }
+
+    @case ('processing') {
+      <div class="progress-state">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>{{ statusMessage() }}</p>
+        <p class="hint">This can take a moment — you can close this dialog and check the statements list later.</p>
+      </div>
+    }
+
+    @case ('done') {
+      <div class="progress-state success">
+        <mat-icon>check_circle</mat-icon>
+        <p>{{ statusMessage() }}</p>
+      </div>
+    }
+
+    @case ('error') {
+      <div class="progress-state error">
+        <mat-icon>error</mat-icon>
+        <p>{{ errorMessage() }}</p>
+
+        <!-- REQ-STMT-08: when the background check is what stopped the import, name the statement
+             it matched. Without this the user sees only that something failed, with no way to
+             tell whether their file was wrong or already imported. -->
+        @if (duplicate(); as dup) {
+          <div class="existing-statement">
+            <div class="row">
+              <span class="label">Existing statement uploaded</span>
+              <span class="value">{{ dup.existingUploadDate | date: 'MMM d, y, h:mm a' }}</span>
+            </div>
+            <div class="row">
+              <span class="label">Transactions</span>
+              <span class="value">{{ dup.existingTransactionCount }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+
 </mat-dialog-content>
 <mat-dialog-actions align="end">
-  <button mat-button (click)="cancel()">Cancel</button>
-  <button mat-raised-button color="primary" [disabled]="!selectedAccount() || !selectedFile()" (click)="upload()">Upload</button>
+  @if (stage() === 'form') {
+    <button mat-button (click)="cancel()">Cancel</button>
+    <button mat-raised-button color="primary" [disabled]="!canSubmit()" (click)="upload()">Upload</button>
+  } @else if (stage() === 'error' || stage() === 'processing') {
+    <button mat-button (click)="cancel()">Close</button>
+  }
 </mat-dialog-actions>

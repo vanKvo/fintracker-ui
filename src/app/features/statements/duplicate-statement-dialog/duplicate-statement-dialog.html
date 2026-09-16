@@ -1,0 +1,35 @@
+<h2 mat-dialog-title class="dialog-title">
+  <mat-icon class="warn-icon">content_copy</mat-icon>
+  Statement already exists
+</h2>
+
+<mat-dialog-content>
+  <p class="reason">{{ reason() }}</p>
+
+  <div class="existing-statement">
+    <div class="row">
+      <span class="label">Uploaded</span>
+      <span class="value">{{ data.duplicate.existingUploadDate | date: 'MMM d, y, h:mm a' }}</span>
+    </div>
+    <div class="row">
+      <span class="label">Transactions</span>
+      <span class="value">{{ data.duplicate.existingTransactionCount }}</span>
+    </div>
+  </div>
+
+  @if (isProbableMatch()) {
+    <p class="hint">
+      If this is genuinely a different statement, choose Cancel and check the account and dates
+      before trying again.
+    </p>
+  }
+
+  <p class="consequence">{{ overwriteConsequence() }}</p>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <!-- Cancel is the default action: overwriting destroys existing transactions, so the safe
+       choice is the one the user reaches without aiming. -->
+  <button mat-button (click)="cancel()" cdkFocusInitial>Cancel</button>
+  <button mat-flat-button color="warn" (click)="overwrite()">Overwrite</button>
+</mat-dialog-actions>

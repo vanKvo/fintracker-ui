@@ -13,19 +13,22 @@ import { UploadStatementModal } from './upload-statement-modal/upload-statement-
 interface Statement {
   id: string;
   account: string;
+  periodDate: Date;
   period: string;
   transactions: number;
   pending: number;
   approved: number;
   status: 'Processing' | 'Needs Attention' | 'Completed' | 'Failed';
   description?: string;
+  // The Ledger's statement record doesn't carry these yet (no per-statement purchase/credit
+  // totals, upload timestamps, or original filename) — always undefined until that lands.
+  // The template already renders a safe fallback ('$0.00' / hidden row) for each.
   lastUploadInfo?: string;
   updatedAt?: string;
   fileName?: string;
   totalPurchases?: string;
   totalCredits?: string;
   totalBalance?: string;
-  group?: 'recent' | 'prior' | 'prior-2025' | 'prior-2024';
 }
 
 @Component({
@@ -53,93 +56,14 @@ export class Statements implements OnInit {
   selectedAccount = signal('All Accounts');
   searchText = signal('');
 
-  statementsList = signal<Statement[]>([
-    {
-      id: '1',
-      account: 'Chase Checking',
-      period: 'Oct 1 – Oct 31, 2025',
-      transactions: 142,
-      pending: 0,
-      approved: 142,
-      status: 'Completed',
-      lastUploadInfo: 'Nov 2, 2025, 8:38 AM',
-      updatedAt: 'Nov 2, 2025, 10:30 AM',
-      fileName: 'chase_stmt_oct_25.pdf',
-      totalPurchases: '-$14,250.70',
-      totalCredits: '+$1,120.30',
-      totalBalance: '$6,880.40',
-      group: 'recent'
-    },
-    {
-      id: '2',
-      account: 'Capital One',
-      period: 'Sept 1 – Sept 30, 2025',
-      transactions: 110,
-      pending: 12,
-      approved: 98,
-      status: 'Needs Attention',
-      lastUploadInfo: 'Oct 2, 2025, 9:00 AM',
-      updatedAt: 'Oct 2, 2025, 9:15 AM',
-      fileName: 'capital_one_stmt_sept_25.pdf',
-      totalPurchases: '-$8,450.20',
-      totalCredits: '+$3,210.00',
-      totalBalance: '$5,240.20',
-      group: 'prior'
-    },
-    {
-      id: '3',
-      account: 'Amex Platinum',
-      period: 'Aug 1 – Aug 31, 2025',
-      transactions: 88,
-      pending: 0,
-      approved: 88,
-      status: 'Completed',
-      lastUploadInfo: 'Sep 3, 2025, 10:15 AM',
-      updatedAt: 'Sep 3, 2025, 11:45 AM',
-      fileName: 'amex_platinum_stmt_aug_25.pdf',
-      totalPurchases: '-$12,180.50',
-      totalCredits: '+$5,000.00',
-      totalBalance: '$10,819.50',
-      group: 'prior'
-    },
-    {
-      id: '4',
-      account: 'Chase Checking',
-      period: 'Jul 1 – Jul 31, 2024',
-      transactions: 64,
-      pending: 0,
-      approved: 64,
-      status: 'Completed',
-      lastUploadInfo: 'Aug 2, 2024, 10:30 AM',
-      updatedAt: 'Aug 2, 2024, 10:30 AM',
-      fileName: 'chase_stmt_jul_24.pdf',
-      totalPurchases: '-$5,200.00',
-      totalCredits: '+$4,500.00',
-      totalBalance: '$8,300.00',
-      group: 'prior-2024'
-    },
-    {
-      id: '5',
-      account: 'Capital One',
-      period: 'Jan 1 – Jan 31, 2025',
-      transactions: 95,
-      pending: 0,
-      approved: 95,
-      status: 'Completed',
-      lastUploadInfo: 'Feb 2, 2025, 11:00 AM',
-      updatedAt: 'Feb 2, 2025, 11:15 AM',
-      fileName: 'capital_one_stmt_jan_25.pdf',
-      totalPurchases: '-$6,120.00',
-      totalCredits: '+$2,500.00',
-      totalBalance: '$4,880.00',
-      group: 'prior-2025'
-    }
-  ]);
+  statementsList = signal<Statement[]>([]);
+  loading = signal(true);
+  loadFailed = signal(false);
 
-  selectedStatementId = signal<string>('1');
+  selectedStatementId = signal<string | null>(null);
 
-  prior2025Expanded = signal(false);
-  prior2024Expanded = signal(true);
+  readonly currentYear = new Date().getFullYear();
+  private expandedYears: Record<number, boolean> = {};
 
   filteredStatements = computed(() => {
     const text = this.searchText().toLowerCase().trim();
@@ -153,12 +77,97 @@ export class Statements implements OnInit {
     });
   });
 
+  recentStatements = computed(() =>
+    this.filteredStatements().filter(s => this.isRecent(s.periodDate))
+  );
+
+  priorStatements = computed(() =>
+    this.filteredStatements().filter(s =>
+      s.periodDate.getFullYear() === this.currentYear && !this.isRecent(s.periodDate)
+    )
+  );
+
+  /**
+   * Distinct past years present in the data, newest first — replaces the page's original
+   * hardcoded "2025"/"2024" sections, which silently dropped any statement outside those two
+   * literal years instead of ever surfacing it.
+   */
+  priorYears = computed(() => {
+    const years = new Set(
+      this.filteredStatements()
+        .map(s => s.periodDate.getFullYear())
+        .filter(year => year < this.currentYear)
+    );
+    return [...years].sort((a, b) => b - a);
+  });
+
   selectedStatement = computed(() => {
     return this.statementsList().find(s => s.id === this.selectedStatementId());
   });
 
   ngOnInit() {
-    this.extractUniqueAccounts();
+    this.loadStatements();
+  }
+
+  loadStatements() {
+    this.loading.set(true);
+    this.loadFailed.set(false);
+    this.statementService.getStatements().subscribe({
+      next: raw => {
+        const statements = raw.map(r => this.toViewModel(r));
+        this.statementsList.set(statements);
+        this.extractUniqueAccounts();
+        if (this.selectedStatementId() === null && statements.length > 0) {
+          this.selectedStatementId.set(statements[0].id);
+        }
+        this.loading.set(false);
+      },
+      error: err => {
+        this.loading.set(false);
+        this.loadFailed.set(true);
+        const message = err?.error?.detail || 'Failed to load statements.';
+        this.snackBar.open(message, 'Dismiss', { duration: 5000 });
+      }
+    });
+  }
+
+  private toViewModel(raw: any): Statement {
+    const periodDate = this.parseLocalDate(raw.period);
+    const pending = raw.pending ?? 0;
+    // A completed import that still has unreviewed transactions needs the user's attention,
+    // same as the page's original mock data modeled — just derived from real counts now
+    // instead of a hardcoded status string the backend never actually sends.
+    const status: Statement['status'] =
+      raw.status === 'Completed' && pending > 0 ? 'Needs Attention' : raw.status;
+
+    return {
+      id: raw.id,
+      account: raw.account,
+      periodDate,
+      period: periodDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+      transactions: raw.transactions ?? 0,
+      pending,
+      approved: raw.approved ?? 0,
+      status,
+      description: raw.description || undefined
+    };
+  }
+
+  /**
+   * Parses the Ledger's date-only statementMonth ("YYYY-MM-DD") in the LOCAL timezone.
+   * `new Date('2026-08-01')` parses a date-only string as UTC midnight, which in any
+   * negative-offset timezone resolves to the previous day locally — see
+   * docs/bugs/bug_dashboard_date_only_parsed_as_utc_shifts_month.md for the same class of bug
+   * already found and fixed on the Dashboard.
+   */
+  private parseLocalDate(value: string): Date {
+    const [year, month, day] = value.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  private isRecent(date: Date): boolean {
+    const now = new Date();
+    return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
   }
 
   extractUniqueAccounts() {
@@ -166,39 +175,49 @@ export class Statements implements OnInit {
     this.accounts = ['All Accounts', ...uniqueAccounts];
   }
 
+  getStatementsForYear(year: number): Statement[] {
+    return this.filteredStatements().filter(s => s.periodDate.getFullYear() === year);
+  }
+
+  /** The most recent prior year opens expanded by default; older years start collapsed. */
+  isYearExpanded(year: number): boolean {
+    const defaultExpanded = this.priorYears()[0] === year;
+    return this.expandedYears[year] ?? defaultExpanded;
+  }
+
+  toggleYear(year: number) {
+    this.expandedYears = { ...this.expandedYears, [year]: !this.isYearExpanded(year) };
+  }
+
   selectStatement(id: string) {
     this.selectedStatementId.set(id);
   }
 
-  getGroupedStatements(group: string) {
-    return this.filteredStatements().filter(s => s.group === group);
-  }
-
-  togglePrior2025() {
-    this.prior2025Expanded.update(v => !v);
-  }
-
-  togglePrior2024() {
-    this.prior2024Expanded.update(v => !v);
-  }
-
   openUploadModal() {
     const dialogRef = this.dialog.open(UploadStatementModal, {
-      width: '400px'
+      width: '480px'
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        console.log('Upload result:', result);
+        const message = result.finalStatus === 'PARTIALLY_COMPLETED'
+          ? 'Statement imported — some transactions need review.'
+          : 'Statement imported successfully.';
+        this.snackBar.open(message, 'Dismiss', { duration: 5000 });
+        this.loadStatements();
       }
     });
   }
 
+  // NOTE: optimistic local update only — there is no bulk "approve all transactions for a
+  // statement" endpoint yet (TransactionService only exposes approveTransaction(id) one at a
+  // time, with no way to look up which transaction ids belong to a given statement). Wiring
+  // this to the backend needs that endpoint first; until then this does not persist.
   approveAllPending(statement: Statement) {
     if (statement.pending > 0) {
       this.statementsList.update(list => list.map(s => {
         if (s.id === statement.id) {
-          return { ...s, pending: 0, approved: s.approved + s.pending };
+          return { ...s, pending: 0, approved: s.approved + s.pending, status: 'Completed' };
         }
         return s;
       }));
@@ -206,12 +225,19 @@ export class Statements implements OnInit {
   }
 
   deleteStatement(statement: Statement) {
-    this.statementsList.update(list => list.filter(s => s.id !== statement.id));
-    if (this.selectedStatementId() === statement.id) {
-      const remaining = this.filteredStatements();
-      if (remaining.length > 0) {
-        this.selectedStatementId.set(remaining[0].id);
+    this.statementService.deleteStatement(statement.id).subscribe({
+      next: () => {
+        this.statementsList.update(list => list.filter(s => s.id !== statement.id));
+        if (this.selectedStatementId() === statement.id) {
+          const remaining = this.filteredStatements();
+          this.selectedStatementId.set(remaining.length > 0 ? remaining[0].id : null);
+        }
+        this.snackBar.open('Statement deleted.', 'Dismiss', { duration: 4000 });
+      },
+      error: err => {
+        const message = err?.error?.detail || 'Failed to delete this statement.';
+        this.snackBar.open(message, 'Dismiss', { duration: 5000 });
       }
-    }
+    });
   }
 }
