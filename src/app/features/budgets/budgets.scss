@@ -56,6 +56,28 @@
   }
 }
 
+// "Save as Template" is a secondary action next to the primary Create Budget button.
+.action-btn.secondary {
+  background-color: #ffffff;
+  color: var(--color-brand-primary);
+  border: 1px solid var(--color-brand-primary);
+
+  mat-icon { color: var(--color-brand-primary); }
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-success-bg);
+    color: var(--color-brand-primary);
+    mat-icon { color: var(--color-brand-primary); }
+  }
+
+  &:disabled {
+    color: #94a3b8;
+    border-color: #cbd5e1;
+    cursor: not-allowed;
+    mat-icon { color: #94a3b8; }
+  }
+}
+
 .budgets-grid {
   display: grid;
   grid-template-columns: 280px 1fr 280px;
@@ -182,7 +204,151 @@
     font-size: 13.5px;
     color: var(--color-text-main);
     font-family: var(--font-primary);
+    // Takes the slack so the badge and delete icon stay right-aligned.
+    flex: 1;
   }
+
+  // The delete control stays out of the way until the row is hovered or selected: it is
+  // destructive, and a row of always-visible bins reads as an invitation to use them.
+  .delete-budget-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    margin-left: 8px;
+    padding: 2px;
+    border: none;
+    background: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    opacity: 0;
+    transition: opacity 0.2s, color 0.2s, background-color 0.2s;
+
+    mat-icon {
+      font-size: 17px;
+      width: 17px;
+      height: 17px;
+    }
+
+    &:hover:not(:disabled) {
+      color: var(--color-error-text);
+      background-color: var(--color-error-bg);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+
+    // Keyboard users never lose the control to the hover-only rule.
+    &:focus-visible {
+      opacity: 1;
+      outline: 2px solid var(--color-brand-primary);
+      outline-offset: 1px;
+    }
+  }
+
+  &:hover .delete-budget-btn {
+    opacity: 1;
+  }
+
+  &.active .delete-budget-btn {
+    opacity: 1;
+    color: rgba(255, 255, 255, 0.75);
+
+    &:hover:not(:disabled) {
+      color: #ffffff;
+      background-color: rgba(255, 255, 255, 0.18);
+    }
+  }
+}
+
+.year-loading {
+  padding: 8px 4px;
+}
+
+// Shown when GET /budgets/years comes back empty — the user has never created a budget.
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 32px 16px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  background-color: var(--color-bg-secondary);
+
+  // Failure is styled differently from emptiness so the two are never read as the same state.
+  &.error {
+    border-color: #e7b8b5;
+    background-color: var(--color-error-bg);
+
+    .empty-icon {
+      color: var(--color-error-text);
+    }
+  }
+
+  .empty-icon {
+    font-size: 34px;
+    width: 34px;
+    height: 34px;
+    color: #cbd5e1;
+    margin-bottom: 10px;
+  }
+
+  .empty-title {
+    font-family: var(--font-primary);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text-main);
+    margin: 0 0 6px;
+  }
+
+  .empty-hint {
+    font-family: var(--font-primary);
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--color-text-muted);
+    margin: 0 0 16px;
+  }
+
+  .empty-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--color-brand-primary);
+    color: #ffffff;
+    font-family: var(--font-primary);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: var(--color-brand-accent);
+    }
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+}
+
+.no-selection-hint {
+  font-family: var(--font-primary);
+  font-size: 13px;
+  color: var(--color-text-muted);
+  padding: 20px 4px;
+  margin: 0;
+}
+
+.highlight.muted {
+  color: var(--color-text-muted);
 }
 
 .status-badge {
@@ -224,6 +390,12 @@
     justify-content: space-between;
     gap: 12px;
     flex-wrap: wrap;
+  }
+
+  .status-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 
   .column-title {
@@ -335,6 +507,10 @@
 
   .label-spent {
     width: 90px;
+    text-align: right;
+  }
+  .label-actions {
+    width: 72px;
     text-align: right;
   }
   .label-remaining {
@@ -453,6 +629,80 @@
     .edit-icon {
       display: none;
     }
+  }
+}
+
+// A limit is read-only until the pencil is clicked. The static form keeps the exact footprint
+// of the input so the row does not reflow when edit mode toggles.
+.budget-input-container {
+  &.readonly {
+    background-color: var(--color-bg-secondary);
+    border-color: #e2e8f0;
+    cursor: default;
+
+    &:hover {
+      border-color: #e2e8f0;
+    }
+  }
+
+  &.editing {
+    border-color: var(--color-brand-primary);
+    box-shadow: 0 0 0 1px var(--color-brand-primary);
+  }
+
+  .budget-input-static {
+    flex: 1;
+    text-align: right;
+    font-size: 13px;
+    font-family: var(--font-mono);
+    color: var(--color-text-main);
+  }
+}
+
+// Actions column — same affordances as the Accounts table: pencil to edit, trash to remove,
+// swapping to done/cancel while a row is open for editing.
+.line-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: 72px;
+  flex-shrink: 0;
+  justify-content: flex-end;
+}
+
+.line-action-btn {
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  transition: color 0.2s, background-color 0.2s;
+
+  mat-icon {
+    font-size: 17px;
+    width: 17px;
+    height: 17px;
+  }
+
+  &.edit:hover:not(:disabled) {
+    color: var(--color-brand-primary);
+  }
+
+  &.delete:hover:not(:disabled) {
+    color: var(--color-error-text);
+  }
+
+  &.save {
+    color: var(--color-brand-primary);
+
+    &:disabled {
+      color: #cbd5e1;
+      cursor: not-allowed;
+    }
+  }
+
+  &.cancel:hover {
+    color: var(--color-error-text);
   }
 }
 

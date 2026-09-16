@@ -47,11 +47,47 @@ export interface UpdateLineItemLimitPayload {
   limitAmount: number;
 }
 
+// REQ-5.3 "Quick Start Templates". Note the field names differ from BudgetLine on purpose: a
+// template carries a `defaultLimit` (a starting suggestion), a budget line a `limitAmount` (a live
+// ceiling). Copy-on-Instantiate is where one becomes the other.
+export interface BudgetTemplateLine {
+  lineId: string | null;
+  templateId: string | null;
+  categoryName: string;
+  defaultLimit: number;
+}
+
+export interface BudgetTemplate {
+  templateId: string;
+  userId: string | null;   // null for the global system catalog
+  name: string;
+  description: string | null;
+  isSystem: boolean;
+  lines: BudgetTemplateLine[];
+  createdAt: string | null;
+}
+
+export interface QuickStartBudgetPayload {
+  effectiveMonth: string;   // YYYY-MM-01
+  templateId: string | null;
+  totalBudgetCap?: number | null;
+  customOverrides: { categoryName: string; limitAmount: number }[];
+}
+
+export interface CreateBudgetTemplatePayload {
+  name: string;
+  description: string | null;
+  // The server reads the allocations from this budget rather than trusting figures echoed back
+  // by the client, so a template can never be saved with amounts the budget does not contain.
+  sourceBudgetId: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class BudgetService {
   private apiUrl = '/api/v1/ledger/budgets';
+  private templatesUrl = '/api/v1/ledger/budget-templates';
 
   constructor(private http: HttpClient) {}
 
@@ -64,6 +100,28 @@ export class BudgetService {
     return this.http.get<Budget>(this.apiUrl, { params });
   }
 
+  // REQ-5.1 A.2 "Get Budgets" — every budget that already exists in the year, most recent month
+  // first, each enriched with spentAmount. Unlike getBudgetForMonth this is a pure read: it never
+  // creates a budget for a month that has none, which is what makes it safe to call for a year
+  // the user may never have budgeted in.
+  getBudgetsForYear(year: number): Observable<Budget[]> {
+    const params = new HttpParams().set('year', year);
+    return this.http.get<Budget[]>(this.apiUrl, { params });
+  }
+
+  // The years the user actually holds budgets in, most recent first. An empty array is the
+  // authoritative "no budgets created yet" signal — distinct from "the current year is empty",
+  // which a user whose budgets are all in past years would also produce.
+  getBudgetYears(): Observable<number[]> {
+    return this.http.get<number[]>(`${this.apiUrl}/years`);
+  }
+
+  // REQ-5.1 A.3 "Delete Budget" — 204 on success. Rejected with 422 when the budget is CLOSED
+  // (it must be reopened first) and 404 when it is already gone.
+  deleteBudget(budgetId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${budgetId}`);
+  }
+
   upsertBudget(payload: UpsertBudgetPayload): Observable<Budget> {
     return this.http.put<Budget>(this.apiUrl, payload);
   }
@@ -74,6 +132,23 @@ export class BudgetService {
 
   reopenBudget(budgetId: string): Observable<Budget> {
     return this.http.post<Budget>(`${this.apiUrl}/${budgetId}/reopen`, {});
+  }
+
+  // ── REQ-5.3 Quick Start Templates ──────────────────────────────────────────
+
+  /** System catalog + the user's own custom templates, system-first then alphabetical. */
+  getBudgetTemplates(): Observable<BudgetTemplate[]> {
+    return this.http.get<BudgetTemplate[]>(this.templatesUrl);
+  }
+
+  /** REQ-5.3 "Copy-on-Instantiate" — 201 with the newly seeded budget. */
+  quickStartBudget(payload: QuickStartBudgetPayload): Observable<Budget> {
+    return this.http.post<Budget>(`${this.apiUrl}/quick-start`, payload);
+  }
+
+  /** "Save as Template" — 201, or 409 when the user already has a template with that name. */
+  createBudgetTemplate(payload: CreateBudgetTemplatePayload): Observable<BudgetTemplate> {
+    return this.http.post<BudgetTemplate>(this.templatesUrl, payload);
   }
 
   // REQ-5.2 granular line-item operations.

@@ -3,12 +3,16 @@
     <h2 class="page-title">Budgets</h2>
     <div class="header-buttons">
       <button class="action-btn" (click)="openCreateBudgetDialog()">
-        <mat-icon>bolt</mat-icon>
-        <span>Quick Template</span>
-      </button>
-      <button class="action-btn" (click)="openCreateBudgetDialog()">
         <mat-icon>add</mat-icon>
         <span>Create Budget</span>
+      </button>
+      <!-- REQ-5.3 "Save as Template": only offered when there is something worth saving. -->
+      <button class="action-btn secondary" (click)="openSaveTemplateDialog()"
+        [disabled]="!canSaveAsTemplate || savingTemplate()"
+        [matTooltip]="canSaveAsTemplate ? 'Save this budget\'s categories as a reusable template'
+                                        : 'Add categories to this budget first'">
+        <mat-icon>bookmark_add</mat-icon>
+        <span>Save as Template</span>
       </button>
     </div>
   </div>
@@ -17,29 +21,72 @@
     <!-- Column 1: My Budgets -->
     <div class="my-budgets-column">
       <h3 class="column-title">My Budgets</h3>
+
+      @if (initializing()) {
+      <mat-progress-bar mode="indeterminate" class="loading-bar"></mat-progress-bar>
+      }
+
+      @if (hasLoadError) {
+      <!-- Distinct from the empty state: we do not know whether budgets exist, so we must not
+           claim there are none. -->
+      <div class="empty-state error">
+        <mat-icon class="empty-icon">cloud_off</mat-icon>
+        <p class="empty-title">Couldn't load your budgets</p>
+        <p class="empty-hint">The budget service didn't respond. Your budgets are safe.</p>
+        <button class="empty-action-btn" (click)="retryLoadBudgetYears()">
+          <mat-icon>refresh</mat-icon>
+          <span>Try Again</span>
+        </button>
+      </div>
+      } @else if (hasNoBudgets) {
+      <!-- REQ-5.1 A.2 — an empty /years response is the authoritative "never budgeted" signal. -->
+      <div class="empty-state">
+        <mat-icon class="empty-icon">savings</mat-icon>
+        <p class="empty-title">No budgets created yet</p>
+        <p class="empty-hint">Create your first budget to start tracking your monthly spending.</p>
+        <button class="empty-action-btn" (click)="openCreateBudgetDialog()">
+          <mat-icon>add</mat-icon>
+          <span>Create Budget</span>
+        </button>
+      </div>
+      } @else {
       <div class="years-list">
-        @for (group of groupedMonths; track group.year) {
+        @for (group of yearGroups; track group.year) {
         <div class="year-group">
           <h4 class="year-header" (click)="toggleYear(group.year)">
             <span>{{ group.year }}</span>
             <mat-icon class="chevron-icon">{{ expandedYears[group.year] ? 'keyboard_arrow_up' : 'keyboard_arrow_down'
               }}</mat-icon>
           </h4>
+
           @if (expandedYears[group.year]) {
+          <!-- Past years are fetched only once, on first expand. -->
+          @if (isYearLoading(group.year)) {
+          <div class="year-loading">
+            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+          </div>
+          } @else {
           <div class="months-list">
-            @for (o of group.months; track o.key) {
-            <div class="budget-item" [class.active]="selectedMonthOption.key === o.key" (click)="selectMonth(o)">
+            @for (o of group.months; track o.budgetId) {
+            <div class="budget-item" [class.active]="selectedMonth?.key === o.key" (click)="selectMonth(o)">
               <span class="month-label">{{ o.monthName }} {{ o.year }}</span>
-              @if (statusFor(o); as status) {
-              <span class="status-badge" [class]="status.toLowerCase()">{{ status }}</span>
+              <span class="status-badge" [class]="o.status.toLowerCase()">{{ o.status }}</span>
+              @if (canDelete(o)) {
+              <button class="delete-budget-btn" (click)="confirmDeleteBudget(o, $event)" [disabled]="deleting()"
+                [matTooltip]="'Delete ' + o.monthName + ' ' + o.year"
+                [attr.aria-label]="'Delete budget for ' + o.monthName + ' ' + o.year">
+                <mat-icon>delete_outline</mat-icon>
+              </button>
               }
             </div>
             }
           </div>
           }
+          }
         </div>
         }
       </div>
+      }
     </div>
 
     <!-- Column 2: Budget Details -->
@@ -50,13 +97,23 @@
 
       <div class="details-header">
         <div class="title-section">
-          <h3 class="column-title">Budget Details: <span class="highlight">{{ selectedMonthOption.monthName }} {{
-              selectedMonthOption.year }}</span></h3>
+          <h3 class="column-title">Budget Details:
+            @if (selectedMonth) {
+            <span class="highlight">{{ selectedMonth.monthName }} {{ selectedMonth.year }}</span>
+            } @else {
+            <span class="highlight muted">—</span>
+            }
+          </h3>
           @if (selectedBudget) {
-          <button class="status-action-btn" [class.closed]="isClosed" (click)="toggleBudgetStatus()">
-            <mat-icon>{{ isClosed ? 'lock_open' : 'lock' }}</mat-icon>
-            <span>{{ isClosed ? 'Reopen Budget' : 'Close Budget' }}</span>
-          </button>
+          <div class="status-section">
+            <span class="status-badge" [class.active]="!isClosed" [class.closed]="isClosed">{{ isClosed ? 'Closed' : 'Active' }}</span>
+            @if (isClosed) {
+            <button class="status-action-btn closed" (click)="reopenSelectedBudget()">
+              <mat-icon>lock_open</mat-icon>
+              <span>Reopen</span>
+            </button>
+            }
+          </div>
           }
         </div>
         <div class="controls-section">
@@ -69,6 +126,9 @@
           <div class="header-labels">
             <span class="label-spent">Actual Spent</span>
             <span class="label-remaining">REMAINING</span>
+            @if (!isClosed) {
+            <span class="label-actions">Actions</span>
+            }
           </div>
         </div>
       </div>
@@ -77,18 +137,36 @@
       <p class="closed-hint">This budget is CLOSED — reopen it to make changes.</p>
       }
 
+      @if (!selectedBudget && !loadingBudget()) {
+      <p class="no-selection-hint">
+        {{ hasNoBudgets ? 'Create a budget to see its categories here.' : 'Select a month to view its budget.' }}
+      </p>
+      }
+
       <div class="categories-list">
         @for (line of filteredLines; track line.lineId) {
         <div class="category-row">
           <div class="row-top">
             <span class="category-name">{{ line.category }}</span>
-            <div class="budget-input-container" [class.disabled]="isClosed">
+
+            <!-- The limit is read-only until the pencil is clicked, mirroring the Accounts table:
+                 an always-live input invites accidental edits to a financial ceiling. -->
+            @if (isEditingLine(line)) {
+            <div class="budget-input-container editing">
               <span class="currency-symbol">$</span>
-              <input type="number" step="0.01" min="0" max="999999999.99" class="budget-input financial-value"
-                [value]="line.limitAmount" [disabled]="isClosed"
-                (change)="commitLineLimit(line, $any($event.target).value)" />
-              <mat-icon class="edit-icon">edit</mat-icon>
+              <input #limitInput type="number" step="0.01" min="0" max="999999999.99"
+                class="budget-input financial-value" [ngModel]="editLimit()"
+                (ngModelChange)="editLimit.set($event)" (keydown.enter)="saveLineEdit(line)"
+                (keydown.escape)="cancelLineEdit()" aria-label="Category limit" />
             </div>
+            } @else {
+            <div class="budget-input-container readonly">
+              <span class="currency-symbol">$</span>
+              <span class="budget-input-static financial-value">{{ line.limitAmount |
+                currency:'USD':'':'1.2-2' }}</span>
+            </div>
+            }
+
             <span class="spent-value financial-value">{{ (line.spentAmount || 0) | currency:'USD':'symbol':'1.2-2' }}</span>
             <span class="remaining-value financial-value" [class.negative]="(line.spentAmount || 0) > line.limitAmount"
               [class.positive]="(line.spentAmount || 0) <= line.limitAmount">
@@ -98,10 +176,29 @@
               +{{ (line.limitAmount - (line.spentAmount || 0)) | currency:'USD':'':'1.2-2' }}
               }
             </span>
+
             @if (!isClosed) {
-            <button mat-icon-button class="remove-line-btn" (click)="removeLine(line)" aria-label="Remove category">
-              <mat-icon>close</mat-icon>
-            </button>
+            <div class="line-actions">
+              @if (isEditingLine(line)) {
+              <button mat-icon-button class="line-action-btn save" (click)="saveLineEdit(line)"
+                [disabled]="!isEditLimitValid()" matTooltip="Save limit" aria-label="Save limit">
+                <mat-icon>done</mat-icon>
+              </button>
+              <button mat-icon-button class="line-action-btn cancel" (click)="cancelLineEdit()"
+                matTooltip="Cancel" aria-label="Cancel editing">
+                <mat-icon>close</mat-icon>
+              </button>
+              } @else {
+              <button mat-icon-button class="line-action-btn edit" (click)="startLineEdit(line)"
+                matTooltip="Edit limit" [attr.aria-label]="'Edit limit for ' + line.category">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button class="line-action-btn delete" (click)="removeLine(line)"
+                matTooltip="Remove category" [attr.aria-label]="'Remove ' + line.category">
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+              }
+            </div>
             }
           </div>
           <div class="row-bottom">

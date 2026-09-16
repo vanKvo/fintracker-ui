@@ -12,21 +12,48 @@
             <span class="starter-desc">Start empty and add your own categories.</span>
           </div>
         </label>
-        <label class="starter-card" [class.selected]="starter() === 'BASIC_LIVING'">
-          <mat-radio-button value="BASIC_LIVING"></mat-radio-button>
+        <label class="starter-card" [class.selected]="starter() === 'TEMPLATE'"
+          [class.disabled]="noTemplatesAvailable()">
+          <mat-radio-button value="TEMPLATE" [disabled]="noTemplatesAvailable()"></mat-radio-button>
           <div class="starter-text">
-            <span class="starter-title">Basic Living</span>
-            <span class="starter-desc">Rent, groceries, utilities and everyday essentials.</span>
-          </div>
-        </label>
-        <label class="starter-card" [class.selected]="starter() === 'AGGRESSIVE_SAVINGS'">
-          <mat-radio-button value="AGGRESSIVE_SAVINGS"></mat-radio-button>
-          <div class="starter-text">
-            <span class="starter-title">Aggressive Savings</span>
-            <span class="starter-desc">Essentials trimmed down, with a large savings transfer.</span>
+            <span class="starter-title">From a template</span>
+            <span class="starter-desc">Reuse a saved set of categories and limits.</span>
           </div>
         </label>
       </mat-radio-group>
+
+      <!-- REQ-5.3 catalog: system templates plus the user's own saved ones. -->
+      @if (templatesLoading()) {
+      <mat-progress-bar mode="indeterminate" class="template-loading"></mat-progress-bar>
+      } @else if (templatesFailed()) {
+      <p class="template-empty error">Couldn't load your templates. You can still start blank.</p>
+      } @else if (noTemplatesAvailable()) {
+      <p class="template-empty">No template available. Save a budget as a template to reuse it here.</p>
+      } @else if (starter() === 'TEMPLATE') {
+      <div class="template-list">
+        @for (t of templates(); track t.templateId) {
+        <button type="button" class="template-option" [class.selected]="selectedTemplateId() === t.templateId"
+          (click)="selectTemplate(t.templateId)">
+          <div class="template-option-text">
+            <span class="template-name">
+              {{ t.name }}
+              @if (t.isSystem) {
+              <span class="template-badge">Built-in</span>
+              }
+            </span>
+            @if (t.description) {
+            <span class="template-desc">{{ t.description }}</span>
+            }
+            <span class="template-meta">{{ t.lines.length }} {{ t.lines.length === 1 ? 'category' :
+              'categories' }}</span>
+          </div>
+          @if (selectedTemplateId() === t.templateId) {
+          <mat-icon class="template-check">check_circle</mat-icon>
+          }
+        </button>
+        }
+      </div>
+      }
     </div>
 
     <div class="period-row">

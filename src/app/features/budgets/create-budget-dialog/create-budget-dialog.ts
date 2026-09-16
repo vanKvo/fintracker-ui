@@ -8,13 +8,21 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { BudgetService, BudgetTemplate } from '../../../core/services/budget.service';
 
 export interface CreateBudgetDialogData {
   categories: string[];
   defaultMonth: Date;
 }
 
-export type BudgetStarter = 'BLANK' | 'BASIC_LIVING' | 'AGGRESSIVE_SAVINGS';
+/**
+ * REQ-5.3: the starter is either a blank budget or a template id from the server catalog. The
+ * hardcoded STARTER_LINES that used to live here ("Basic Living", "Aggressive Savings") are now
+ * seeded system templates in ledger.budget_templates — the catalog is their system of record, so
+ * the two can no longer drift apart.
+ */
+export type BudgetStarter = 'BLANK' | 'TEMPLATE';
 
 export interface CreateBudgetLineDraft {
   category: string;
@@ -24,35 +32,9 @@ export interface CreateBudgetLineDraft {
 export interface CreateBudgetResult {
   effectiveMonth: string;
   lines: { category: string; limitAmount: number }[];
+  /** Set when the user picked a template, so the caller can use the REQ-5.3 quick-start endpoint. */
+  templateId: string | null;
 }
-
-// REQ-5.3 "Quick Start Templates" specs a server-side template catalog
-// (BudgetTemplateController, GET /api/v1/budget-templates) that is not implemented yet — see
-// docs/fintracker-ledger-doc/ledger-5-budget-spec.md REQ-5.3 and the Budgets page missing-logic
-// notes. Until that exists, "Basic Living" / "Aggressive Savings" are seeded client-side as
-// starting points rather than fetched. REQ-5.1's "Template Customization" rule (fully editable
-// before creation) still holds: these seed the same editable line list a from-scratch budget
-// uses, and the request is always sent as explicit `lines`, never a `templateId`.
-const STARTER_LINES: Record<Exclude<BudgetStarter, 'BLANK'>, CreateBudgetLineDraft[]> = {
-  BASIC_LIVING: [
-    { category: 'Rent/Mortgage', limitAmount: 1500 },
-    { category: 'Groceries', limitAmount: 500 },
-    { category: 'Utilities', limitAmount: 200 },
-    { category: 'Transportation', limitAmount: 150 },
-    { category: 'Insurance', limitAmount: 200 },
-    { category: 'Dining Out', limitAmount: 100 },
-    { category: 'Miscellaneous', limitAmount: 100 }
-  ],
-  AGGRESSIVE_SAVINGS: [
-    { category: 'Rent/Mortgage', limitAmount: 1200 },
-    { category: 'Savings Transfer', limitAmount: 1000 },
-    { category: 'Groceries', limitAmount: 350 },
-    { category: 'Utilities', limitAmount: 150 },
-    { category: 'Transportation', limitAmount: 100 },
-    { category: 'Dining Out', limitAmount: 50 },
-    { category: 'Miscellaneous', limitAmount: 50 }
-  ]
-};
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -71,7 +53,8 @@ const MONTH_NAMES = [
     MatInputModule,
     MatSelectModule,
     MatRadioModule,
-    MatIconModule
+    MatIconModule,
+    MatProgressBarModule
   ],
   templateUrl: './create-budget-dialog.html',
   styleUrl: './create-budget-dialog.scss'
@@ -85,6 +68,13 @@ export class CreateBudgetDialog {
   month = signal(0);
   year = signal(0);
   lines = signal<CreateBudgetLineDraft[]>([]);
+
+  // REQ-5.3 catalog, fetched when the dialog opens.
+  templates = signal<BudgetTemplate[]>([]);
+  selectedTemplateId = signal<string | null>(null);
+  templatesLoading = signal(true);
+  // Distinct from "no templates": a failed fetch must not be reported as an empty catalog.
+  templatesFailed = signal(false);
 
   newCategory = signal<string | null>(null);
   newLimit = signal<number | null>(null);
@@ -106,8 +96,13 @@ export class CreateBudgetDialog {
     )
   );
 
+  /** True only once the server confirmed the catalog is empty. */
+  noTemplatesAvailable = computed(() =>
+    !this.templatesLoading() && !this.templatesFailed() && this.templates().length === 0);
+
   constructor(
     private dialogRef: MatDialogRef<CreateBudgetDialog>,
+    private budgetService: BudgetService,
     @Inject(MAT_DIALOG_DATA) data: CreateBudgetDialogData
   ) {
     this.categories = data.categories;
@@ -115,11 +110,47 @@ export class CreateBudgetDialog {
     this.year.set(data.defaultMonth.getFullYear());
     const currentYear = data.defaultMonth.getFullYear();
     this.years = Array.from({ length: 5 }, (_, i) => currentYear - 1 + i);
+    this.loadTemplates();
+  }
+
+  private loadTemplates(): void {
+    this.budgetService.getBudgetTemplates().subscribe({
+      next: (templates) => {
+        this.templates.set(templates ?? []);
+        this.templatesFailed.set(false);
+        this.templatesLoading.set(false);
+      },
+      error: () => {
+        this.templatesLoading.set(false);
+        this.templatesFailed.set(true);
+      }
+    });
+  }
+
+  selectTemplate(templateId: string): void {
+    this.selectedTemplateId.set(templateId);
+    const template = this.templates().find(t => t.templateId === templateId);
+    // Previewed as editable drafts: REQ-5.3 "Template Line Item Overrides" lets the user adjust
+    // the baseline before anything is persisted, and Copy-on-Instantiate means edits here can
+    // never reach the template itself.
+    this.lines.set((template?.lines ?? []).map(l => ({
+      category: l.categoryName,
+      limitAmount: l.defaultLimit
+    })));
   }
 
   selectStarter(starter: BudgetStarter): void {
     this.starter.set(starter);
-    this.lines.set(starter === 'BLANK' ? [] : STARTER_LINES[starter].map(l => ({ ...l })));
+    if (starter === 'BLANK') {
+      this.selectedTemplateId.set(null);
+      this.lines.set([]);
+      return;
+    }
+    // Preselect the first template so choosing "From a template" is never a dead end.
+    const first = this.templates()[0];
+    if (first) {
+      this.selectTemplate(first.templateId);
+    }
   }
 
   updateLineLimit(index: number, rawValue: string): void {
@@ -154,7 +185,8 @@ export class CreateBudgetDialog {
     const effectiveMonth = `${this.year()}-${String(this.month() + 1).padStart(2, '0')}-01`;
     const result: CreateBudgetResult = {
       effectiveMonth,
-      lines: this.lines().map(l => ({ category: l.category, limitAmount: l.limitAmount ?? 0 }))
+      lines: this.lines().map(l => ({ category: l.category, limitAmount: l.limitAmount ?? 0 })),
+      templateId: this.starter() === 'TEMPLATE' ? this.selectedTemplateId() : null
     };
     this.dialogRef.close(result);
   }

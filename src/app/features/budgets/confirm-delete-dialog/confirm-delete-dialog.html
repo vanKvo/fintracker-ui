@@ -1,0 +1,31 @@
+<h2 mat-dialog-title class="dialog-title">
+  <mat-icon class="warning-icon">warning</mat-icon>
+  <span>Delete this budget?</span>
+</h2>
+
+<mat-dialog-content class="dialog-content">
+  <p class="confirm-text">
+    You're about to delete the budget for <strong>{{ data.monthLabel }}</strong>.
+  </p>
+
+  @if (data.lineCount > 0) {
+  <p class="confirm-detail">
+    Its {{ data.lineCount }} {{ data.lineCount === 1 ? 'category' : 'categories' }} and their limits will be
+    removed with it.
+  </p>
+  }
+
+  <p class="confirm-detail">
+    Your transactions are not affected — only the spending limits for this month are removed.
+  </p>
+
+  <p class="confirm-warning">This action cannot be undone.</p>
+</mat-dialog-content>
+
+<mat-dialog-actions class="dialog-actions">
+  <button class="btn-cancel" (click)="cancel()">Cancel</button>
+  <button class="btn-delete" (click)="confirm()" cdkFocusInitial>
+    <mat-icon>delete</mat-icon>
+    <span>Delete Budget</span>
+  </button>
+</mat-dialog-actions>
