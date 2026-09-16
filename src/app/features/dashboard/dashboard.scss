@@ -69,8 +69,171 @@
 
         &.income-text { color: var(--color-success-text); }
         &.expense-text { color: var(--color-text-main); }
+        &.negative-text { color: var(--color-error-text); }
       }
     }
+  }
+}
+
+// Spend pace — how far into this month's income the user already is.
+.spend-pace {
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+
+  .spend-pace-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .spend-pace-label {
+    font-family: var(--font-primary);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-text-muted);
+  }
+
+  .spend-pace-value {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-text-main);
+  }
+
+  .spend-pace-track {
+    height: 8px;
+    border-radius: 4px;
+    background-color: #f1f5f9;
+    overflow: hidden;
+  }
+
+  .spend-pace-fill {
+    height: 100%;
+    border-radius: 4px;
+    background-color: var(--color-brand-primary);
+    transition: width 0.25s ease-in-out;
+
+    // Outspending income is the one state worth flagging.
+    &.over { background-color: var(--color-error-text); }
+  }
+}
+
+/* ---------------------------------------------------- Upcoming bills */
+
+.bills-card {
+  margin-bottom: 1.5rem;
+
+  .data-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .bills-total {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+  }
+}
+
+.bills-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.bill-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-left-width: 3px;
+  border-radius: 6px;
+
+  // Functional status palette (see docs/color_schema/color_schema.md, Section 2).
+  &.urgency-soon {
+    border-left-color: var(--color-warning-text);
+    background-color: var(--color-warning-bg);
+  }
+
+  &.urgency-upcoming {
+    border-left-color: #cbd5e1;
+    background-color: var(--color-bg-primary);
+  }
+
+  .bill-main {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .bill-payee {
+    font-family: var(--font-primary);
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--color-text-main);
+  }
+
+  .bill-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-primary);
+    font-size: 11.5px;
+    color: var(--color-text-muted);
+  }
+
+  // Green face, white text — never gold on green (Section 4.D).
+  .autopay-chip {
+    background-color: var(--color-brand-primary);
+    color: #ffffff;
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .bill-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    white-space: nowrap;
+  }
+
+  .bill-amount {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--color-text-main);
+  }
+
+  .bill-due {
+    font-family: var(--font-primary);
+    font-size: 11px;
+    color: var(--color-text-muted);
+  }
+
+  &.urgency-soon .bill-due {
+    color: var(--color-warning-text);
+    font-weight: 700;
   }
 }
 
@@ -159,12 +322,107 @@
     font-size: 0.75rem;
   }
 
+  .merchant-cell {
+    font-weight: 700;
+  }
+
+  .account-cell,
+  .date-cell {
+    color: var(--color-text-muted);
+    white-space: nowrap;
+  }
+
+  // Dollar columns use the mono stack with tabular figures (Section 3).
+  .amount-header {
+    text-align: right;
+  }
+
+  .amount-cell {
+    text-align: right;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
   .expense-amount {
     color: var(--color-text-main);
   }
 
   .income-amount {
     color: var(--color-success-text);
-    font-weight: 500;
+    font-weight: 700;
+  }
+}
+
+// Empty/error states — same pattern as Budgets (docs/color_schema/color_schema.md): failure is
+// styled distinctly from emptiness so a load error is never mistaken for "nothing here yet".
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 32px 16px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  background-color: var(--color-bg-secondary);
+
+  &.error {
+    border-color: #e7b8b5;
+    background-color: var(--color-error-bg);
+
+    .empty-icon {
+      color: var(--color-error-text);
+    }
+  }
+
+  .empty-icon {
+    font-size: 34px;
+    width: 34px;
+    height: 34px;
+    color: #cbd5e1;
+    margin-bottom: 10px;
+  }
+
+  .empty-title {
+    font-family: var(--font-primary);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text-main);
+    margin: 0 0 6px;
+  }
+
+  .empty-hint {
+    font-family: var(--font-primary);
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--color-text-muted);
+    margin: 0 0 16px;
+  }
+
+  .empty-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--color-brand-primary);
+    color: #ffffff;
+    font-family: var(--font-primary);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: var(--color-brand-accent);
+    }
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
   }
 }

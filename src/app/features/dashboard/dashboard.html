@@ -17,24 +17,55 @@
     <div class="data-card-header">
       <h2 class="section-heading">Financial Summary</h2>
     </div>
-    <div class="stats-grid">
-      <div class="stat-item">
-        <div class="stat-label">Total Balance</div>
-        <div class="stat-value">{{summaryStats.totalBalance}}</div>
+    @if (summaryLoadFailed) {
+      <div class="empty-state error">
+        <mat-icon class="empty-icon">cloud_off</mat-icon>
+        <p class="empty-title">Couldn't load your financial summary</p>
+        <p class="empty-hint">The dashboard service didn't respond.</p>
+        <button class="empty-action-btn" (click)="loadDashboard()">
+          <mat-icon>refresh</mat-icon>
+          <span>Try Again</span>
+        </button>
       </div>
-      <div class="stat-item">
-        <div class="stat-label">Monthly Income</div>
-        <div class="stat-value income-text">{{summaryStats.monthlyIncome}}</div>
+    } @else {
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-label">Total Balance</div>
+          <div class="stat-value">{{summaryStats.totalBalance}}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Monthly Income</div>
+          <div class="stat-value income-text">{{summaryStats.monthlyIncome}}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Monthly Expenses</div>
+          <div class="stat-value expense-text">{{summaryStats.monthlyExpenses}}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Net Cash Flow</div>
+          <div class="stat-value" [class.income-text]="netCashflowThisMonth >= 0"
+               [class.negative-text]="netCashflowThisMonth < 0">
+            {{netCashflowThisMonth | currency}}
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Linked Accounts</div>
+          <div class="stat-value">{{summaryStats.numberOfAccounts}}</div>
+        </div>
       </div>
-      <div class="stat-item">
-        <div class="stat-label">Monthly Expenses</div>
-        <div class="stat-value expense-text">{{summaryStats.monthlyExpenses}}</div>
+
+      <!-- Spend pace: how much of this month's income has already gone out -->
+      <div class="spend-pace">
+        <div class="spend-pace-head">
+          <span class="spend-pace-label">Spent this month</span>
+          <span class="spend-pace-value">{{spendPacePercent | number: '1.0-0'}}% of income</span>
+        </div>
+        <div class="spend-pace-track">
+          <div class="spend-pace-fill" [class.over]="spendPacePercent >= 90"
+               [style.width.%]="spendPacePercent"></div>
+        </div>
       </div>
-      <div class="stat-item">
-        <div class="stat-label">Number of Accounts</div>
-        <div class="stat-value">{{summaryStats.numberOfAccounts}}</div>
-      </div>
-    </div>
+    }
   </div>
 
   <div class="charts-grid">
@@ -102,42 +133,125 @@
     </div>
   </div>
 
+  <!-- Upcoming bills: the forward-looking view the Reports page doesn't cover -->
+  <div class="data-card bills-card">
+    <div class="data-card-header">
+      <h2 class="section-heading">Upcoming Bills</h2>
+      @if (upcomingBills.length > 0) {
+        <span class="bills-total">{{billsTotal | currency}} due in the next 30 days</span>
+      }
+    </div>
+    @if (billsLoadFailed) {
+      <div class="empty-state error">
+        <mat-icon class="empty-icon">cloud_off</mat-icon>
+        <p class="empty-title">Couldn't load upcoming bills</p>
+        <p class="empty-hint">The dashboard service didn't respond.</p>
+        <button class="empty-action-btn" (click)="loadBills()">
+          <mat-icon>refresh</mat-icon>
+          <span>Try Again</span>
+        </button>
+      </div>
+    } @else if (upcomingBills.length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">receipt_long</mat-icon>
+        <p class="empty-title">No upcoming bills</p>
+        <p class="empty-hint">Bills you add will show up here as they come due.</p>
+      </div>
+    } @else {
+      <ul class="bills-list">
+        @for (bill of upcomingBills; track bill.id) {
+          <li class="bill-item" [class]="'urgency-' + billUrgency(bill.dueDate)">
+            <div class="bill-main">
+              <span class="bill-payee">{{bill.payee}}</span>
+              <span class="bill-meta">
+                {{bill.category}}
+                @if (bill.autopay) {
+                  <span class="autopay-chip">Autopay</span>
+                }
+              </span>
+            </div>
+            <div class="bill-side">
+              <span class="bill-amount">{{bill.amount | currency}}</span>
+              <span class="bill-due">
+                @if (daysUntil(bill.dueDate) === 0) {
+                  Due today
+                } @else {
+                  Due in {{daysUntil(bill.dueDate)}} days
+                }
+              </span>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
   <!-- Recent Transactions Table Area -->
   <div class="data-card transactions-card">
     <div class="data-card-header">
       <h2 class="section-heading">Recent Transactions</h2>
       <button class="btn-text" routerLink="/transactions">View All</button>
     </div>
-    <div class="table-responsive">
-      <table mat-table [dataSource]="recentTransactions" class="transactions-table">
-        <ng-container matColumnDef="date">
-          <th mat-header-cell *matHeaderCellDef> Date </th>
-          <td mat-cell *matCellDef="let element"> {{element.date}} </td>
-        </ng-container>
+    @if (transactionsLoadFailed) {
+      <div class="empty-state error">
+        <mat-icon class="empty-icon">cloud_off</mat-icon>
+        <p class="empty-title">Couldn't load transactions</p>
+        <p class="empty-hint">The transactions service didn't respond.</p>
+        <button class="empty-action-btn" (click)="loadDashboard()">
+          <mat-icon>refresh</mat-icon>
+          <span>Try Again</span>
+        </button>
+      </div>
+    } @else if (recentTransactions.length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">receipt_long</mat-icon>
+        <p class="empty-title">No transactions yet</p>
+        <p class="empty-hint">Add a transaction or upload a statement to get started.</p>
+        <button class="empty-action-btn" routerLink="/transactions">
+          <mat-icon>add</mat-icon>
+          <span>Add Transaction</span>
+        </button>
+      </div>
+    } @else {
+      <div class="table-responsive">
+        <table mat-table [dataSource]="recentTransactions" class="transactions-table">
+          <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef> Date </th>
+            <td mat-cell *matCellDef="let element" class="date-cell">
+              {{element.date | date: 'MMM d, y'}}
+            </td>
+          </ng-container>
 
-        <ng-container matColumnDef="merchant">
-          <th mat-header-cell *matHeaderCellDef> Merchant </th>
-          <td mat-cell *matCellDef="let element"> {{element.merchant}} </td>
-        </ng-container>
+          <ng-container matColumnDef="merchant">
+            <th mat-header-cell *matHeaderCellDef> Merchant </th>
+            <td mat-cell *matCellDef="let element" class="merchant-cell"> {{element.merchant}} </td>
+          </ng-container>
 
-        <ng-container matColumnDef="category">
-          <th mat-header-cell *matHeaderCellDef> Category </th>
-          <td mat-cell *matCellDef="let element">
-             <span class="category-chip">{{element.category}}</span>
-          </td>
-        </ng-container>
+          <ng-container matColumnDef="account">
+            <th mat-header-cell *matHeaderCellDef> Account </th>
+            <td mat-cell *matCellDef="let element" class="account-cell"> {{element.account}} </td>
+          </ng-container>
 
-        <ng-container matColumnDef="amount">
-          <th mat-header-cell *matHeaderCellDef> Amount </th>
-          <td mat-cell *matCellDef="let element"
-              [ngClass]="{'expense-amount': element.category !== 'Income', 'income-amount': element.category === 'Income'}">
-            {{element.category === 'Income' ? '+' : '-'}} {{element.amount | currency}}
-          </td>
-        </ng-container>
+          <ng-container matColumnDef="category">
+            <th mat-header-cell *matHeaderCellDef> Category </th>
+            <td mat-cell *matCellDef="let element">
+               <span class="category-chip">{{element.category}}</span>
+            </td>
+          </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-      </table>
-    </div>
+          <ng-container matColumnDef="amount">
+            <th mat-header-cell *matHeaderCellDef class="amount-header"> Amount </th>
+            <td mat-cell *matCellDef="let element" class="amount-cell"
+                [ngClass]="{'expense-amount': element.amount < 0, 'income-amount': element.amount >= 0}">
+              <!-- The currency pipe already renders the sign; prefixing one produced "- -$45.00". -->
+              {{element.amount | currency}}
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      </div>
+    }
   </div>
 </div>
