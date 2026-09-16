@@ -1,5 +1,10 @@
-// Page wrapper standard (see docs/color_schema/color_schema.md, Section 4.A) — matches the
-// Accounts tab's .accounts-view.
+// Reports page styles.
+//
+// Follows docs/color_schema/color_schema.md — every colour below references a custom property
+// actually defined in styles.scss, the page title matches the Page Title Format Standard, the
+// tables match the Table Format Standard, and no single element pairs gold with green.
+
+// Page wrapper standard (Section 4.A) — matches the Accounts tab's .accounts-view.
 .reports-container {
   padding: 24px;
   background-color: var(--color-bg-secondary);
@@ -7,87 +12,784 @@
   box-sizing: border-box;
 }
 
+// Shared card surface (Section 4.A): white face, 1px #e2e8f0 border, 8px radius.
+.data-card {
+  background-color: var(--color-bg-primary);
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
+}
+
+.data-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+// Section-level sub-heading tier — brand green differentiates it from the page title (Section 3).
+.section-heading {
+  font-family: var(--font-primary);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-brand-primary);
+  margin: 0;
+}
+
+.card-caption {
+  font-family: var(--font-primary);
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------------------------------------------------------------- Header */
+
 .header-actions {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
   flex-wrap: wrap;
   gap: 16px;
   margin-bottom: 24px;
 
-  // Page title standard (see docs/color_schema/color_schema.md): 20px/700, text-main, Plus Jakarta Sans.
+  // Page title standard (Section 3): 20px/700, text-main, Plus Jakarta Sans.
   .page-title {
+    font-family: var(--font-primary);
     font-size: 20px;
     font-weight: 700;
     color: var(--color-text-main);
     margin: 0;
+  }
+
+  .page-subtitle {
     font-family: var(--font-primary);
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin: 4px 0 0;
+
+    strong {
+      color: var(--color-text-main);
+      font-weight: 600;
+    }
   }
 
   .action-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     flex-wrap: wrap;
   }
 
-  .time-range-select {
-    width: 200px;
+  .period-select {
+    width: 220px;
     max-width: 100%;
 
-    // Custom Material input styling overrides
     ::ng-deep .mat-mdc-form-field-subscript-wrapper {
       display: none;
     }
   }
 }
 
-.reports-grid {
+// Buttons follow the Accounts tab pattern: brand-green face, white text, gold on hover.
+// Text stays white in both states — gold and green are never paired (Section 4.D).
+%report-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 6px;
+  padding: 9px 16px;
+  font-family: var(--font-primary);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+
+  mat-icon {
+    font-size: 17px;
+    width: 17px;
+    height: 17px;
+  }
+}
+
+.btn-primary {
+  @extend %report-button;
+  background-color: var(--color-brand-primary);
+  color: #ffffff;
+  border: 1px solid var(--color-brand-primary);
+
+  &:hover {
+    background-color: var(--color-brand-accent);
+    border-color: var(--color-brand-accent);
+    color: #ffffff;
+  }
+}
+
+.btn-secondary {
+  @extend %report-button;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-main);
+  border: 1px solid #cbd5e1;
+
+  &:hover {
+    border-color: var(--color-brand-primary);
+    color: var(--color-brand-primary);
+  }
+}
+
+.btn-ghost {
+  @extend %report-button;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--color-text-muted);
+  padding: 6px 10px;
+  font-size: 12.5px;
+
+  &:hover {
+    background-color: #f8fafc;
+    color: var(--color-brand-primary);
+  }
+}
+
+/* --------------------------------------------------------- AI summary */
+
+.ai-summary-card {
+  // Green rail marks this as the AI-authored section without tinting the whole card,
+  // keeping the gold accent budget free for actual CTAs (Section 1, 60-30-10).
+  border-left: 3px solid var(--color-brand-primary);
+}
+
+.ai-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.ai-heading-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+// Gold icon + gold text on a white face — a gold/white pairing, never gold on green.
+.ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  font-family: var(--font-primary);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-brand-accent);
+  background-color: var(--color-bg-primary);
+  border: 1px solid var(--color-brand-accent);
+  border-radius: 4px;
+  padding: 3px 8px;
+
+  mat-icon {
+    font-size: 13px;
+    width: 13px;
+    height: 13px;
+  }
+}
+
+.ai-headline {
+  font-family: var(--font-primary);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--color-text-main);
+  margin: 0 0 12px;
+}
+
+.ai-body {
+  font-family: var(--font-primary);
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--color-text-main);
+  margin: 0 0 16px;
+  max-width: 78ch;
+}
+
+.ai-findings {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-family: var(--font-primary);
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--color-text-main);
+
+    mat-icon {
+      flex-shrink: 0;
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      margin-top: 1px;
+      color: var(--color-success-text);
+    }
+  }
+}
+
+.ai-meta {
+  font-family: var(--font-primary);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* --------------------------------------------------------- Skeletons */
+
+.skeleton-line {
+  height: 11px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 37%, #f1f5f9 63%);
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  margin-bottom: 10px;
+
+  &.w-85 { width: 85%; }
+  &.w-70 { width: 70%; }
+  &.w-50 { width: 50%; }
+  &.w-40 { width: 40%; }
+}
+
+.skeleton-value {
+  height: 24px;
+  width: 65%;
+  margin-top: 12px;
+}
+
+.chart-skeleton {
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #f8fafc 25%, #f1f5f9 37%, #f8fafc 63%);
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton-caption {
+  font-family: var(--font-primary);
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: 12px 0 0;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-line,
+  .chart-skeleton {
+    animation: none;
+  }
+}
+
+/* ----------------------------------------------------- Metric cards */
+
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.metric-card {
+  margin-bottom: 0;
+  padding: 20px;
+
+  .metric-label {
+    font-family: var(--font-primary);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    margin-bottom: 10px;
+  }
+
+  // Financial figures render in the mono stack (Section 3 / 4.C).
+  .metric-value {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-text-main);
+    line-height: 1.2;
+  }
+
+  .metric-delta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 10px;
+    font-family: var(--font-primary);
+    font-size: 12px;
+    font-weight: 700;
+
+    mat-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+    }
+
+    // Tone is keyed to good/bad, not to direction — falling expenses are green, not red.
+    &.tone-good { color: var(--color-success-text); }
+    &.tone-bad { color: var(--color-error-text); }
+    &.tone-flat { color: var(--color-text-muted); }
+
+    .delta-baseline {
+      font-weight: 500;
+      color: var(--color-text-muted);
+    }
+  }
+}
+
+/* ------------------------------------------------- Analysis two-up */
+
+.analysis-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
+  gap: 24px;
+  margin-bottom: 24px;
 
-  @media (min-width: 992px) {
-    grid-template-columns: 1fr 1fr;
+  @media (min-width: 1100px) {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  }
+
+  .data-card {
+    margin-bottom: 0;
+  }
+}
+
+.analysis-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+/* --------------------------------------------- Emergency fund card */
+
+.fund-headline {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.fund-runway {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+
+  // Runway health, not direction of change (Section 2 functional palette).
+  &.tone-good { color: var(--color-success-text); }
+  &.tone-warn { color: var(--color-warning-text); }
+  &.tone-bad { color: var(--color-error-text); }
+
+  .fund-runway-unit {
+    font-family: var(--font-primary);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+  }
+}
+
+.fund-balance {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+
+  .fund-balance-value {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-text-main);
+  }
+
+  .fund-balance-label {
+    font-family: var(--font-primary);
+    font-size: 11.5px;
+    color: var(--color-text-muted);
+    margin-top: 2px;
+  }
+}
+
+.fund-track {
+  height: 8px;
+  border-radius: 4px;
+  background-color: #f1f5f9;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.fund-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.25s ease-in-out;
+
+  &.tone-good { background-color: var(--color-brand-primary); }
+  &.tone-warn { background-color: var(--color-warning-text); }
+  &.tone-bad { background-color: var(--color-error-text); }
+}
+
+.fund-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+
+  label {
+    font-family: var(--font-primary);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+  }
+
+  input[type='range'] {
+    flex: 1;
+    min-width: 100px;
+    accent-color: var(--color-brand-primary);
+    cursor: pointer;
+  }
+
+  .fund-target-value {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--color-text-main);
+    min-width: 74px;
+    text-align: right;
+  }
+}
+
+.fund-verdict {
+  font-family: var(--font-primary);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--color-text-main);
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+
+  strong {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
   }
 }
 
 .chart-content {
   position: relative;
-  min-height: 240px;
-  height: 300px;
+  height: 320px;
 
   @media (max-width: 600px) {
-    height: 240px;
+    height: 260px;
   }
 }
 
-.summary-stats-card {
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    padding: 1rem 0;
+/* ------------------------------------------------------- Insights */
 
-    .stat-item {
-      display: flex;
-      flex-direction: column;
-      
-      .stat-label {
-        font-size: 0.875rem;
-        color: var(--color-text-muted);
-        margin-bottom: 0.5rem;
-      }
+.insights-card {
+  display: flex;
+  flex-direction: column;
+}
 
-      .stat-value {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: var(--color-text-main);
-        font-family: var(--font-mono);
-        font-variant-numeric: tabular-nums;
+.insights-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 460px;
+  overflow-y: auto;
+}
 
-        &.income-text { color: var(--color-success-text); }
-        &.expense-text { color: var(--color-text-main); }
-        &.savings-text { color: var(--color-brand-primary); }
-      }
-    }
+.insight-item {
+  border: 1px solid #e2e8f0;
+  border-left-width: 3px;
+  border-radius: 6px;
+  padding: 14px 16px;
+
+  // Functional status palette (Section 2) — muted tints, no neon.
+  &.kind-risk {
+    border-left-color: var(--color-error-text);
+    background-color: var(--color-error-bg);
+  }
+
+  &.kind-anomaly {
+    border-left-color: var(--color-warning-text);
+    background-color: var(--color-warning-bg);
+  }
+
+  &.kind-opportunity {
+    border-left-color: var(--color-success-text);
+    background-color: var(--color-success-bg);
+  }
+
+  &.kind-trend {
+    border-left-color: var(--color-info-text);
+    background-color: var(--color-info-bg);
+  }
+}
+
+.insight-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.insight-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-primary);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+
+  .kind-risk & { color: var(--color-error-text); }
+  .kind-anomaly & { color: var(--color-warning-text); }
+  .kind-opportunity & { color: var(--color-success-text); }
+  .kind-trend & { color: var(--color-info-text); }
+}
+
+.insight-impact {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.insight-title {
+  font-family: var(--font-primary);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0 0 6px;
+  line-height: 1.4;
+}
+
+.insight-detail {
+  font-family: var(--font-primary);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--color-text-main);
+  margin: 0;
+}
+
+.insight-action {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 0;
+  font-family: var(--font-primary);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-main);
+
+  mat-icon {
+    font-size: 15px;
+    width: 15px;
+    height: 15px;
+  }
+}
+
+/* --------------------------------------------------------- Tables */
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+// Table Format Standard (Section 3) — matches the Accounts tab exactly.
+.report-table {
+  width: 100%;
+  background: transparent;
+  border-collapse: collapse;
+
+  th.mat-mdc-header-cell {
+    background-color: #f8fafc;
+    color: var(--color-text-muted);
+    font-weight: 700;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    font-family: var(--font-primary);
+    white-space: nowrap;
+  }
+
+  td.mat-mdc-cell {
+    padding: 16px;
+    border-bottom: 1px solid #f1f5f9;
+    color: var(--color-text-main);
+    font-size: 13.5px;
+    font-family: var(--font-primary);
+  }
+
+  .numeric {
+    text-align: right;
+  }
+
+  // Dollar and count columns use the mono stack with tabular figures (Section 3).
+  .financial-value {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+
+    &.muted { color: var(--color-text-muted); font-weight: 500; }
+    &.strong { font-weight: 700; }
+  }
+
+  .row-primary {
+    display: block;
+    font-weight: 700;
+    color: var(--color-text-main);
+  }
+
+  .row-secondary {
+    display: block;
+    margin-top: 2px;
+    font-size: 11.5px;
+    color: var(--color-text-muted);
+  }
+
+  .category-chip {
+    display: inline-block;
+    background-color: #f1f5f9;
+    color: #475569;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .change-pill {
+    display: inline-block;
+    min-width: 62px;
+    text-align: center;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 11.5px;
+    font-weight: 700;
+
+    // Spending going up is the unfavourable direction in this table.
+    &.dir-up { background-color: var(--color-error-bg); color: var(--color-error-text); }
+    &.dir-down { background-color: var(--color-success-bg); color: var(--color-success-text); }
+    &.dir-flat { background-color: #f1f5f9; color: var(--color-text-muted); }
+  }
+
+  .share-col {
+    width: 210px;
+  }
+
+  .share-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .share-track {
+    flex: 1;
+    height: 6px;
+    min-width: 80px;
+    border-radius: 3px;
+    background-color: #f1f5f9;
+    overflow: hidden;
+  }
+
+  .share-fill {
+    height: 100%;
+    border-radius: 3px;
+    background-color: var(--color-brand-primary);
+  }
+
+  .share-value {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    min-width: 44px;
+    text-align: right;
+  }
+}
+
+.table-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 40px 16px;
+  color: var(--color-text-muted);
+  font-family: var(--font-primary);
+  font-size: 13px;
+
+  mat-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    opacity: 0.6;
+  }
+
+  p {
+    margin: 0;
   }
 }

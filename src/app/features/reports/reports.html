@@ -1,73 +1,342 @@
 <div class="reports-container">
+
+  <!-- Header: period + baseline selection and export actions -->
   <div class="header-actions">
-    <h2 class="page-title">Financial Reports</h2>
-    <div class="action-controls" style="display: flex; gap: 8px; align-items: center;">
-      <mat-form-field appearance="outline" class="time-range-select" style="margin-bottom: -1.25em;">
-        <mat-label>Time Range</mat-label>
-        <mat-select [(value)]="selectedTimeRange">
-          @for (range of timeRanges; track range.value) {
-            <mat-option [value]="range.value">{{range.viewValue}}</mat-option>
+    <div class="title-block">
+      <h2 class="page-title">Financial Reports</h2>
+      <p class="page-subtitle">
+        Analysing <strong>{{ selectedPeriodLabel() }}</strong> against <strong>{{ baselineLabel() }}</strong>
+      </p>
+    </div>
+
+    <div class="action-controls">
+      <mat-form-field appearance="outline" class="period-select">
+        <mat-label>Reporting period</mat-label>
+        <mat-select [value]="selectedPeriod()" (valueChange)="onPeriodChange($event)">
+          @for (period of periods; track period.value) {
+            <mat-option [value]="period.value">{{ period.viewValue }}</mat-option>
           }
         </mat-select>
       </mat-form-field>
-      
-      <button mat-stroked-button color="primary">Export CSV</button>
-      <button mat-stroked-button color="primary">Export PDF</button>
+
+      <button type="button" class="btn-secondary" (click)="onExport('CSV')">
+        <mat-icon>table_view</mat-icon>
+        Export CSV
+      </button>
+      <button type="button" class="btn-primary" (click)="onExport('PDF')">
+        <mat-icon>picture_as_pdf</mat-icon>
+        Export PDF
+      </button>
     </div>
   </div>
 
-  <div class="reports-grid">
-    <!-- Spending by Category (Pie Chart) -->
-    <div class="data-card report-card">
-      <div class="data-card-header">
-        <h2 class="section-heading">Spending by Category</h2>
+  <!-- AI-generated narrative summary — the headline of the report -->
+  <section class="data-card ai-summary-card" aria-labelledby="ai-summary-heading">
+    <div class="ai-summary-header">
+      <div class="ai-heading-group">
+        <span class="ai-badge">
+          <mat-icon>auto_awesome</mat-icon>
+          AI Summary
+        </span>
+        <h3 id="ai-summary-heading" class="section-heading">Your {{ selectedPeriodLabel() }} in review</h3>
       </div>
-      <div class="chart-content">
-        <canvas baseChart
-          [data]="categoryChartData"
-          [options]="categoryChartOptions"
-          [type]="'pie'">
-        </canvas>
-      </div>
+
+      @if (!narrativeLoading()) {
+        <button type="button" class="btn-ghost" (click)="regenerateNarrative()"
+                matTooltip="Generate a fresh summary from the latest data">
+          <mat-icon>refresh</mat-icon>
+          Regenerate
+        </button>
+      }
     </div>
 
-    <!-- Income vs Expenses Trend (Line Chart) -->
-    <div class="data-card report-card">
+    @if (narrativeLoading()) {
+      <div class="ai-skeleton" role="status" aria-live="polite">
+        <span class="sr-only">Generating your financial summary…</span>
+        <div class="skeleton-line w-70"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line w-85"></div>
+        <p class="skeleton-caption">Generating your summary…</p>
+      </div>
+    } @else if (narrative(); as ai) {
+      <p class="ai-headline">{{ ai.headline }}</p>
+      <p class="ai-body">{{ ai.summary }}</p>
+
+      <ul class="ai-findings">
+        @for (finding of ai.keyFindings; track finding) {
+          <li>
+            <mat-icon>check_circle</mat-icon>
+            <span>{{ finding }}</span>
+          </li>
+        }
+      </ul>
+
+      <p class="ai-meta">
+        Generated {{ ai.generatedAt | date: 'MMM d, y, h:mm a' }} by {{ ai.model }}. AI summaries can be
+        incomplete — check figures against the tables below before acting on them.
+      </p>
+    }
+  </section>
+
+  <!-- Period-over-period headline metrics -->
+  <section class="metrics-row" aria-label="Period comparison metrics">
+    @if (loading()) {
+      @for (placeholder of [1, 2, 3, 4]; track placeholder) {
+        <div class="data-card metric-card">
+          <div class="skeleton-line w-50"></div>
+          <div class="skeleton-line skeleton-value"></div>
+        </div>
+      }
+    } @else {
+      @for (metric of metrics(); track metric.label) {
+        <div class="data-card metric-card">
+          <div class="metric-label">{{ metric.label }}</div>
+          <div class="metric-value">{{ metric.displayValue }}</div>
+          <div class="metric-delta" [class]="'tone-' + metric.tone">
+            @if (metric.direction !== 'flat') {
+              <mat-icon>{{ metric.direction === 'up' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+            }
+            <span>{{ metric.deltaLabel }}</span>
+            <span class="delta-baseline">vs {{ baselineLabel() }}</span>
+          </div>
+        </div>
+      }
+    }
+  </section>
+
+  <div class="analysis-grid">
+    <div class="analysis-column">
+    <!-- Longer-horizon trend, wider than the selected reporting period -->
+    <section class="data-card trend-card" aria-labelledby="trend-heading">
       <div class="data-card-header">
-        <h2 class="section-heading">Cashflow Trend</h2>
+        <h3 id="trend-heading" class="section-heading">Savings rate &amp; net cashflow</h3>
+        <span class="card-caption">Last 6 months</span>
       </div>
       <div class="chart-content">
-        <canvas baseChart
-          [data]="trendChartData"
-          [options]="trendChartOptions"
-          [type]="'line'">
-        </canvas>
+        @if (loading()) {
+          <div class="chart-skeleton" role="status">
+            <span class="sr-only">Loading chart…</span>
+          </div>
+        } @else {
+          <canvas baseChart
+            [data]="savingsChartData()"
+            [options]="savingsChartOptions"
+            [type]="'line'">
+          </canvas>
+        }
       </div>
+    </section>
+
+    <!-- Emergency fund runway — interactive, driven off trailing-average expenses -->
+    <section class="data-card fund-card" aria-labelledby="fund-heading">
+      <div class="data-card-header">
+        <h3 id="fund-heading" class="section-heading">Emergency fund runway</h3>
+        <span class="card-caption">Based on 6-month average spend</span>
+      </div>
+
+      @if (loading()) {
+        <div class="skeleton-line w-50"></div>
+        <div class="skeleton-line skeleton-value"></div>
+      } @else if (emergencyFund(); as fund) {
+        <div class="fund-headline">
+          <div class="fund-runway" [class]="'tone-' + runwayTone()">
+            {{ runwayMonths() | number: '1.1-1' }}
+            <span class="fund-runway-unit">months covered</span>
+          </div>
+          <div class="fund-balance">
+            <span class="fund-balance-value financial-value">{{ fund.currentBalance | currency }}</span>
+            <span class="fund-balance-label">
+              saved against {{ fund.avgMonthlyExpenses | currency }}/mo average spend
+            </span>
+          </div>
+        </div>
+
+        <div class="fund-track" role="img"
+             [attr.aria-label]="'Emergency fund is ' + (fundProgress() | number: '1.0-0') + ' percent of target'">
+          <div class="fund-fill" [class]="'tone-' + runwayTone()" [style.width.%]="fundProgress()"></div>
+        </div>
+
+        <div class="fund-control">
+          <label for="target-months">Target coverage</label>
+          <input id="target-months" type="range" min="1" max="12" step="1"
+                 [value]="targetMonths()"
+                 (input)="onTargetMonthsChange($any($event.target).value)" />
+          <span class="fund-target-value">{{ targetMonths() }} months</span>
+        </div>
+
+        <p class="fund-verdict">
+          @if (fundGap() > 0) {
+            You need <strong class="financial-value">{{ fundGap() | currency }}</strong> more to cover
+            {{ targetMonths() }} months of expenses.
+          } @else {
+            You are <strong class="financial-value">{{ -fundGap() | currency }}</strong> ahead of your
+            {{ targetMonths() }}-month target.
+          }
+        </p>
+      }
+    </section>
     </div>
+
+    <!-- Actionable AI insights, most urgent first -->
+    <section class="data-card insights-card" aria-labelledby="insights-heading">
+      <div class="data-card-header">
+        <h3 id="insights-heading" class="section-heading">Insights &amp; recommendations</h3>
+        <span class="card-caption">{{ sortedInsights().length }} found</span>
+      </div>
+
+      <div class="insights-list">
+        @if (loading()) {
+          @for (placeholder of [1, 2, 3]; track placeholder) {
+            <div class="insight-item">
+              <div class="skeleton-line w-40"></div>
+              <div class="skeleton-line"></div>
+            </div>
+          }
+        } @else {
+          @for (insight of sortedInsights(); track insight.id) {
+            <article class="insight-item" [class]="'kind-' + insight.kind">
+              <div class="insight-head">
+                <span class="insight-kind">
+                  <mat-icon>{{ insightIcon(insight.kind) }}</mat-icon>
+                  {{ insightLabel(insight.kind) }}
+                </span>
+                @if (impactLabel(insight); as impact) {
+                  <span class="insight-impact">{{ impact }}</span>
+                }
+              </div>
+              <h4 class="insight-title">{{ insight.title }}</h4>
+              <p class="insight-detail">{{ insight.detail }}</p>
+              @if (insight.impactAmount > 0) {
+                <p class="insight-action">
+                  <mat-icon>arrow_forward</mat-icon>
+                  {{ insight.recommendedAction }}
+                </p>
+              }
+            </article>
+          }
+        }
+      </div>
+    </section>
   </div>
 
-  <!-- Summary Stats Area for future implementation -->
-  <div class="data-card summary-stats-card">
+  <!-- Category breakdown with period-over-period columns -->
+  <section class="data-card table-card" aria-labelledby="category-heading">
     <div class="data-card-header">
-      <h2 class="section-heading">Period Summary</h2>
+      <h3 id="category-heading" class="section-heading">Category breakdown</h3>
+      <span class="card-caption">{{ selectedPeriodLabel() }} vs {{ baselineLabel() }}</span>
     </div>
-    <div class="stats-grid">
-      <div class="stat-item">
-        <div class="stat-label">Total Income</div>
-        <div class="stat-value income-text">$8,450.00</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-label">Total Expenses</div>
-        <div class="stat-value expense-text">$3,240.50</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-label">Net Savings</div>
-        <div class="stat-value savings-text">$5,209.50</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-label">Savings Rate</div>
-        <div class="stat-value">61.6%</div>
-      </div>
+
+    <div class="table-responsive">
+      <table mat-table [dataSource]="categories()" class="report-table">
+        <ng-container matColumnDef="category">
+          <th mat-header-cell *matHeaderCellDef>Category</th>
+          <td mat-cell *matCellDef="let row">
+            <span class="row-primary">{{ row.category }}</span>
+            <span class="row-secondary">{{ row.transactionCount }} transactions</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="amount">
+          <th mat-header-cell *matHeaderCellDef class="numeric">{{ selectedPeriodLabel() }}</th>
+          <td mat-cell *matCellDef="let row" class="numeric financial-value">
+            {{ row.amount | currency }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="previous">
+          <th mat-header-cell *matHeaderCellDef class="numeric">{{ baselineLabel() }}</th>
+          <td mat-cell *matCellDef="let row" class="numeric financial-value muted">
+            {{ row.previousAmount | currency }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="change">
+          <th mat-header-cell *matHeaderCellDef class="numeric">Change</th>
+          <td mat-cell *matCellDef="let row" class="numeric">
+            <span class="change-pill" [class]="'dir-' + categoryChangeTone(row)">
+              {{ categoryChange(row) }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="share">
+          <th mat-header-cell *matHeaderCellDef class="share-col">Share of spend</th>
+          <td mat-cell *matCellDef="let row" class="share-col">
+            <div class="share-wrapper">
+              <div class="share-track">
+                <div class="share-fill" [style.width.%]="row.shareOfTotal * 100"></div>
+              </div>
+              <span class="share-value financial-value">{{ row.shareOfTotal | percent: '1.1-1' }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="categoryColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: categoryColumns"></tr>
+      </table>
+
+      @if (!loading() && categories().length === 0) {
+        <div class="table-empty-state" role="status">
+          <mat-icon>summarize</mat-icon>
+          <p>No spending recorded for this period</p>
+        </div>
+      }
     </div>
-  </div>
+  </section>
+
+  <!-- Merchant concentration -->
+  <section class="data-card table-card" aria-labelledby="merchant-heading">
+    <div class="data-card-header">
+      <h3 id="merchant-heading" class="section-heading">Top merchants</h3>
+      <span class="card-caption">By total spend</span>
+    </div>
+
+    <div class="table-responsive">
+      <table mat-table [dataSource]="merchants()" class="report-table">
+        <ng-container matColumnDef="merchant">
+          <th mat-header-cell *matHeaderCellDef>Merchant</th>
+          <td mat-cell *matCellDef="let row">
+            <span class="row-primary">{{ row.merchant }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="category">
+          <th mat-header-cell *matHeaderCellDef>Category</th>
+          <td mat-cell *matCellDef="let row">
+            <span class="category-chip">{{ row.category }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="count">
+          <th mat-header-cell *matHeaderCellDef class="numeric">Transactions</th>
+          <td mat-cell *matCellDef="let row" class="numeric financial-value">{{ row.transactionCount }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="average">
+          <th mat-header-cell *matHeaderCellDef class="numeric">Average</th>
+          <td mat-cell *matCellDef="let row" class="numeric financial-value muted">
+            {{ averageTransaction(row) | currency }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="amount">
+          <th mat-header-cell *matHeaderCellDef class="numeric">Total</th>
+          <td mat-cell *matCellDef="let row" class="numeric financial-value strong">
+            {{ row.amount | currency }}
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="merchantColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: merchantColumns"></tr>
+      </table>
+
+      @if (!loading() && merchants().length === 0) {
+        <div class="table-empty-state" role="status">
+          <mat-icon>storefront</mat-icon>
+          <p>No merchant activity for this period</p>
+        </div>
+      }
+    </div>
+  </section>
 </div>
