@@ -8,6 +8,7 @@ import {
   signOut,
 } from 'aws-amplify/auth';
 import { Hub } from 'aws-amplify/utils';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -50,6 +51,7 @@ export class AuthService {
   }
 
   async isAuthenticated(): Promise<boolean> {
+    if (this.e2eOverrideSub() !== null) return true;
     try {
       const session = await fetchAuthSession();
       return !!session.tokens;
@@ -60,8 +62,42 @@ export class AuthService {
 
   /** Returns the Cognito sub of the signed-in user. */
   async getCurrentUserSub(): Promise<string> {
+    const override = this.e2eOverrideSub();
+    if (override !== null) return override;
     const user = await getCurrentUser();
     return user.userId;
+  }
+
+  /**
+   * E2E test hook only — lets Playwright simulate "signed in as sub X" without driving AWS's
+   * real Cognito Hosted UI (an external page needing real test-user credentials Playwright
+   * can't reasonably own). Inert in production: `environment.production` is `true` there, so
+   * this always returns null regardless of what a page script sets. Set via
+   * `page.addInitScript()` before navigation — see fintracker-ui/e2e/.
+   */
+  private e2eOverrideSub(): string | null {
+    if (environment.production) return null;
+    return (globalThis as { __e2eAuthOverrideSub__?: string }).__e2eAuthOverrideSub__ ?? null;
+  }
+
+  /**
+   * The identity value this environment actually authenticates requests
+   * with — the devUserMap-resolved internal UUID in development, or the
+   * real Cognito sub in production. This is the single source of truth
+   * `authInterceptor` reads for X-Internal-User-Id, so every request (and
+   * anything embedding an identity value outside the interceptor's reach —
+   * e.g. StatementService.uploadToS3's S3 metadata headers, which must
+   * match what the Ledger signed into the presigned URL) agrees on it.
+   */
+  async getCurrentUserId(): Promise<string> {
+    // The e2e override supplies the resolved internal_user_id directly — it's a fixture id
+    // generated per test run, not a real Cognito sub, so there is nothing to translate via
+    // devUserMap here.
+    const override = this.e2eOverrideSub();
+    if (override !== null) return override;
+    if (environment.production) return this.getCurrentUserSub();
+    const sub = await this.getCurrentUserSub();
+    return environment.devUserMap[sub] ?? environment.devUserId;
   }
 
   private async checkSession(): Promise<void> {

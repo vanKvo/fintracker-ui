@@ -12,4 +12,5 @@ export const environment: AppEnvironment = {
     redirectSignOut: 'https://app.fintracker.dev/auth/login',
   },
   devUserId: '',
+  devUserMap: {},
 };

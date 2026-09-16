@@ -18,4 +18,12 @@ export interface AppEnvironment {
    * Ignored in production builds.
    */
   devUserId: string;
+  /**
+   * Dev-only: maps a real Cognito `sub` (from the signed-in Amplify session) to a
+   * distinct internal UUID, so multiple local Cognito accounts can each see their
+   * own seeded data instead of all collapsing onto devUserId. A sub not present
+   * here falls back to devUserId. Ignored in production builds — this is a
+   * stand-in for the sub→UUID resolution API Gateway performs for real.
+   */
+  devUserMap: Record<string, string>;
 }

@@ -5,29 +5,32 @@ import { AuthService } from '../services/auth.service';
 import { environment } from '../../../environments/environment';
 
 /**
- * Auth interceptor — behaviour differs between build configurations:
+ * Auth interceptor — behaviour differs per target, not just per build configuration:
  *
- * PRODUCTION: fetches the JWT access token via Amplify (silent refresh included)
- *   and attaches  Authorization: Bearer <token>.  API Gateway validates the JWT
- *   and injects X-Internal-User-Id before forwarding to backend services.
+ * THE LEDGER (/api/v1/ledger), in local dev only: there is no API Gateway or authorizer in
+ *   front of the local Spring Boot process, so it trusts X-Internal-User-Id directly. The value
+ *   comes from AuthService.getCurrentUserId() — see that method for how it's resolved
+ *   (devUserMap, or an e2e test override).
  *
- * DEVELOPMENT: attaches X-Internal-User-Id: <environment.devUserId> directly so
- *   requests reach the local Spring Boot ledger service without an API Gateway.
- *   If Amplify's token refresh fails (session expired), signOut() is called and
- *   the request is aborted with the original error.
+ * EVERY OTHER BACKEND (e.g. /api/v1/identity), and the Ledger in production: these always sit
+ *   behind a real Lambda REQUEST authorizer that verifies a real Cognito-issued JWT — dev or
+ *   prod, there is no bypass — so they always get Authorization: Bearer <token> instead.
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   if (!req.url.includes('/api/')) {
     return next(req);
   }
 
-  if (!environment.production) {
-    return next(
-      req.clone({ setHeaders: { 'X-Internal-User-Id': environment.devUserId } })
+  const authService = inject(AuthService);
+
+  if (!environment.production && req.url.includes('/api/v1/ledger')) {
+    return from(authService.getCurrentUserId()).pipe(
+      switchMap((userId) =>
+        next(req.clone({ setHeaders: { 'X-Internal-User-Id': userId } }))
+      ),
     );
   }
 
-  const authService = inject(AuthService);
   return from(authService.getAccessToken()).pipe(
     switchMap((token) =>
       next(req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }))
