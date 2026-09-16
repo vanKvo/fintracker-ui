@@ -1,0 +1,38 @@
+<h2 mat-dialog-title class="dialog-title">
+  <mat-icon class="warning-icon">warning</mat-icon>
+  <span>Delete "{{ data.category.displayName }}"?</span>
+</h2>
+
+<mat-dialog-content class="dialog-content">
+  @if (!requiresReassignment) {
+    <p class="confirm-text">
+      This category isn't used by any transactions yet.
+    </p>
+    <p class="confirm-warning">This action cannot be undone.</p>
+  } @else {
+    <p class="confirm-text">
+      <strong>{{ data.transactionCount }}</strong>
+      {{ data.transactionCount === 1 ? 'transaction uses' : 'transactions use' }} this category.
+      Choose a category to move {{ data.transactionCount === 1 ? 'it' : 'them' }} to before deleting.
+    </p>
+
+    <mat-form-field appearance="outline" class="reassign-field" subscriptSizing="dynamic">
+      <mat-label>Reassign to</mat-label>
+      <mat-select [ngModel]="reassignToCategoryId()" (ngModelChange)="reassignToCategoryId.set($event)">
+        @for (cat of data.otherCategories; track cat.categoryId) {
+          <mat-option [value]="cat.categoryId">{{ cat.displayName }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <p class="confirm-warning">This action cannot be undone.</p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions class="dialog-actions">
+  <button class="btn-cancel" (click)="cancel()">Cancel</button>
+  <button class="btn-delete" (click)="confirm()" [disabled]="!canConfirm" cdkFocusInitial>
+    <mat-icon>delete</mat-icon>
+    <span>{{ requiresReassignment ? 'Reassign & Delete' : 'Delete Category' }}</span>
+  </button>
+</mat-dialog-actions>

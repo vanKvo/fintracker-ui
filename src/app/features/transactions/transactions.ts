@@ -24,7 +24,8 @@ import { SplitTransactionDialog, SplitResult } from './split-transaction-dialog/
 import { AddTransactionDialog, CreateTransactionResult } from './add-transaction-dialog/add-transaction-dialog';
 import { TransactionService, UpdateTransactionPayload } from '../../core/services/transaction.service';
 import { AccountService, Account } from '../../core/services/account.service';
-import { catchError } from 'rxjs/operators';
+import { CategoryService } from '../../core/services/category.service';
+import { catchError, map } from 'rxjs/operators';
 import { forkJoin, of } from 'rxjs';
 
 export interface Transaction {
@@ -106,6 +107,7 @@ export class Transactions implements AfterViewInit {
   constructor(
     private transactionService: TransactionService,
     private accountService: AccountService,
+    private categoryService: CategoryService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog
   ) {
@@ -124,10 +126,15 @@ export class Transactions implements AfterViewInit {
     });
   }
 
-  // REQ-2.2 "Inline Row Modification": the category drop-down is the system-defined list from
-  // TransactionCategory, not derived from whatever happens to be on already-loaded transactions.
+  // REQ-2.2 "Inline Row Modification" / REQ-TS-01: the category drop-down is the merged
+  // system + this user's custom category list, not derived from whatever happens to be on
+  // already-loaded transactions. Transactions still store category as a display-name string
+  // (REQ-TS-01 deliberately did not migrate this to categoryId — see
+  // ledger-transaction-tests-01.md's scope boundary), so only displayName is used here.
   private loadCategories() {
-    this.transactionService.getCategories().subscribe({
+    this.categoryService.getCategories().pipe(
+      map((categories) => categories.map((c) => c.displayName))
+    ).subscribe({
       next: (categories) => this.categories = categories,
       error: () => this.snackBar.open('Failed to load categories.', 'Dismiss', { duration: 5000 })
     });
@@ -314,11 +321,11 @@ export class Transactions implements AfterViewInit {
     // stay empty for the rest of the session with no retry, silently breaking this dialog.
     forkJoin([
       this.accountService.getAccounts(),
-      this.transactionService.getCategories()
+      this.categoryService.getCategories()
     ]).subscribe({
       next: ([accounts, categories]) => {
         this.fullAccounts = accounts;
-        this.categories = categories;
+        this.categories = categories.map((c) => c.displayName);
         this.launchAddTransactionDialog();
       },
       error: () => this.snackBar.open('Failed to load accounts/categories. Please try again.', 'Dismiss', { duration: 5000 })

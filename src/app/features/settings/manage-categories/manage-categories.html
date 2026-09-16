@@ -1,0 +1,70 @@
+<div class="categories-container">
+  <h4 class="section-title">Your Categories</h4>
+  <p class="section-hint">
+    Create your own categories for transactions and budgets — like "Auto Property Tax" — alongside
+    the built-in ones below. You can rename or delete only the categories you create.
+  </p>
+
+  <div class="add-category-row">
+    <mat-form-field appearance="outline" class="add-category-field" subscriptSizing="dynamic">
+      <mat-label>New category name</mat-label>
+      <input matInput [ngModel]="newCategoryName()" (ngModelChange)="newCategoryName.set($event)"
+             (keydown.enter)="createCategory()" maxlength="100" placeholder="e.g. Auto Property Tax">
+    </mat-form-field>
+    <button mat-flat-button color="primary" (click)="createCategory()"
+            [disabled]="!newCategoryName().trim() || creating()">
+      <mat-icon>add</mat-icon>
+      <span>Add</span>
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-row">
+      <mat-spinner diameter="28"></mat-spinner>
+    </div>
+  } @else {
+    @if (customCategories().length === 0) {
+      <p class="empty-hint">You haven't created any custom categories yet.</p>
+    } @else {
+      <ul class="category-list">
+        @for (category of customCategories(); track category.categoryId) {
+          <li class="category-row">
+            @if (editingCategoryId() === category.categoryId) {
+              <mat-form-field appearance="outline" class="edit-field" subscriptSizing="dynamic">
+                <input matInput [ngModel]="editingName()" (ngModelChange)="editingName.set($event)"
+                       (keydown.enter)="saveEdit(category)" maxlength="100">
+              </mat-form-field>
+              <button mat-icon-button color="primary" (click)="saveEdit(category)"
+                      [disabled]="!editingName().trim() || saving()" aria-label="Save">
+                <mat-icon>check</mat-icon>
+              </button>
+              <button mat-icon-button (click)="cancelEdit()" aria-label="Cancel">
+                <mat-icon>close</mat-icon>
+              </button>
+            } @else {
+              <span class="category-name">{{ category.displayName }}</span>
+              <span class="row-actions">
+                <button mat-icon-button (click)="startEdit(category)" aria-label="Rename">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button (click)="deleteCategory(category)"
+                        [disabled]="deletingCategoryId() === category.categoryId" aria-label="Delete">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </span>
+            }
+          </li>
+        }
+      </ul>
+    }
+  }
+
+  <h4 class="section-title system-title">Built-in Categories</h4>
+  <p class="section-hint">Available to every account and always shown — these can't be edited or removed.</p>
+
+  <mat-chip-set class="system-chip-set">
+    @for (category of systemCategories(); track category.categoryId) {
+      <mat-chip disabled>{{ category.displayName }}</mat-chip>
+    }
+  </mat-chip-set>
+</div>

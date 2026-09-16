@@ -61,10 +61,6 @@ export class TransactionService {
     );
   }
 
-  getCategories(): Observable<string[]> {
-    return this.http.get<string[]>(`${this.apiUrl}/categories`);
-  }
-
   createTransaction(payload: CreateTransactionPayload): Observable<any> {
     return this.http.post<any>(this.apiUrl, payload);
   }
