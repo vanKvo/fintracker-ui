@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
-import { StatementService } from './statement.service';
+import { StatementService, findDateColumnIndex, parseCsvRows, parseFlexibleDate } from './statement.service';
 
 /** timer(0, n) emits asynchronously, so the first poll request only exists after a macrotask. */
 const flushPoll = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -195,5 +195,68 @@ describe('StatementService', () => {
 
     expect(last.errorCode).toBe('SERVER_DUPLICATE_DETECTED');
     expect(last.duplicate.existingTransactionCount).toBe(12);
+  });
+
+  // REQ-STMT-09
+  it('detects the opening/closing date range from a CSV with a "date" header', async () => {
+    const csv = 'date,merchant,amount\n01/15/2026,Coffee Shop,4.50\n01/03/2026,Grocery,62.10\n01/28/2026,Gas Station,40.00\n';
+    const file = new File([csv], 'stmt.csv', { type: 'text/csv' });
+
+    const range = await service.detectCsvDateRange(file);
+
+    expect(range).toEqual({ openingDate: '2026-01-03', closingDate: '2026-01-28' });
+  });
+
+  it('falls back to the highest-density date column when no header is named "date"', async () => {
+    const csv = 'transaction_date,payee,total\n2026-02-01,Coffee Shop,4.50\n2026-02-20,Grocery,62.10\n';
+    const file = new File([csv], 'stmt.csv', { type: 'text/csv' });
+
+    const range = await service.detectCsvDateRange(file);
+
+    expect(range).toEqual({ openingDate: '2026-02-01', closingDate: '2026-02-20' });
+  });
+
+  it('returns null for a CSV with no plausible date column', async () => {
+    const csv = 'merchant,amount\nCoffee Shop,4.50\nGrocery,62.10\n';
+    const file = new File([csv], 'stmt.csv', { type: 'text/csv' });
+
+    expect(await service.detectCsvDateRange(file)).toBeNull();
+  });
+});
+
+// REQ-STMT-09
+describe('CSV date-range detection helpers', () => {
+  it('parseCsvRows splits quoted fields containing commas', () => {
+    const rows = parseCsvRows('date,merchant,amount\n01/01/2026,"Store, Inc.",10.00');
+    expect(rows).toEqual([
+      ['date', 'merchant', 'amount'],
+      ['01/01/2026', 'Store, Inc.', '10.00'],
+    ]);
+  });
+
+  it('parseFlexibleDate accepts MM/DD/YYYY and ISO, rejects garbage', () => {
+    expect(parseFlexibleDate('01/15/2026')?.toISOString().slice(0, 10)).toBe('2026-01-15');
+    expect(parseFlexibleDate('2026-01-15')?.toISOString().slice(0, 10)).toBe('2026-01-15');
+    expect(parseFlexibleDate('13/45/2026')).toBeNull();
+    expect(parseFlexibleDate('not a date')).toBeNull();
+    expect(parseFlexibleDate('')).toBeNull();
+  });
+
+  it('findDateColumnIndex prefers an exact "date" header over density', () => {
+    const header = ['id', 'date', 'amount'];
+    const rows = [
+      ['1', '01/01/2026', '10.00'],
+      ['2', '01/02/2026', '20.00'],
+    ];
+    expect(findDateColumnIndex(header, rows)).toBe(1);
+  });
+
+  it('findDateColumnIndex returns -1 when no column is mostly parseable dates', () => {
+    const header = ['merchant', 'amount'];
+    const rows = [
+      ['Coffee Shop', '4.50'],
+      ['Grocery', '62.10'],
+    ];
+    expect(findDateColumnIndex(header, rows)).toBe(-1);
   });
 });

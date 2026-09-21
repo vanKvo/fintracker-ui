@@ -83,6 +83,107 @@ export interface JobStatusResponse {
   duplicate?: DuplicateInfo;
 }
 
+/**
+ * REQ-STMT-09 helpers — pure functions so the date-detection heuristic is testable without a
+ * DOM/File object. Deliberately not a full RFC 4180 parser: just enough to split a bank-export
+ * CSV's cells (including simple quoted fields) for column-scanning purposes. A malformed row
+ * degrades to a bad guess for that row, never a thrown error.
+ */
+export function parseCsvRows(text: string): string[][] {
+  return text
+    .split(/\r\n|\r|\n/)
+    .filter((line) => line.length > 0)
+    .map((line) => {
+      const cells: string[] = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          if (inQuotes && line[i + 1] === '"') {
+            current += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          cells.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      cells.push(current.trim());
+      return cells;
+    });
+}
+
+/** Accepts common bank-export date formats; returns null rather than an Invalid Date. */
+export function parseFlexibleDate(raw: string): Date | null {
+  const value = (raw || '').trim();
+  if (!value) return null;
+
+  // MM/DD/YYYY, M-D-YY, etc. — the formats a native `new Date(string)` parse is unreliable for
+  // (that constructor is documented as implementation-defined for anything but ISO 8601).
+  const slashOrDash = value.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+  if (slashOrDash) {
+    const [, month, day, yearRaw] = slashOrDash;
+    const year = yearRaw.length === 2 ? 2000 + Number(yearRaw) : Number(yearRaw);
+    const date = new Date(Date.UTC(year, Number(month) - 1, Number(day)));
+    const valid = date.getUTCFullYear() === year && date.getUTCMonth() === Number(month) - 1 && date.getUTCDate() === Number(day);
+    return valid ? date : null;
+  }
+
+  const isoMatch = value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (isoMatch) {
+    const [, year, month, day] = isoMatch;
+    const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  return null;
+}
+
+/** FileReader, not file.text()/arrayBuffer() — broader support across browsers/test runtimes. */
+function readFileAsText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ''));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(file);
+  });
+}
+
+function toIsoDate(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+/**
+// REQ-STMT-09: Auto-detects the CSV date column for form pre-filling.
+// Matches backend logic (gatekeeper/service.py): trusts a header named "date" 
+// outright; otherwise selects the column with the highest frequency of valid date values.
+ */
+export function findDateColumnIndex(header: string[], dataRows: string[][]): number {
+  const exactIndex = header.findIndex((h) => h.trim().toLowerCase() === 'date');
+  if (exactIndex !== -1) return exactIndex;
+
+  let bestIndex = -1;
+  let bestDensity = 0;
+  for (let col = 0; col < header.length; col++) {
+    const values = dataRows.map((row) => row[col]).filter((v) => v);
+    if (!values.length) continue;
+    const parsedCount = values.filter((v) => parseFlexibleDate(v) !== null).length;
+    const density = parsedCount / values.length;
+    if (density > bestDensity) {
+      bestDensity = density;
+      bestIndex = col;
+    }
+  }
+  // A column that mostly fails to parse as a date is more likely amount/merchant than a date
+  // column with unusual formatting — better to leave the fields blank than guess wrong.
+  return bestDensity >= 0.5 ? bestIndex : -1;
+}
+
 const TERMINAL_STATUSES: PipelineJobStatus[] = ['COMPLETED', 'PARTIALLY_COMPLETED', 'FAILED'];
 
 /** Non-terminal statuses that stop the poller because they need an answer from the user. */
@@ -199,6 +300,33 @@ export class StatementService {
     return Array.from(new Uint8Array(digest))
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('');
+  }
+
+  /**
+   * REQ-STMT-09: best-effort detection of a CSV's statement date range, to pre-fill the
+   * openingDate/closingDate fields instead of requiring the user to type them. Returns null
+   * (rather than throwing) whenever the file doesn't look parseable — the caller leaves the
+   * date fields for the user to fill in manually, exactly as before this existed.
+   */
+  async detectCsvDateRange(file: File): Promise<{ openingDate: string; closingDate: string } | null> {
+    const text = await readFileAsText(file);
+    const rows = parseCsvRows(text);
+    if (rows.length < 2) return null;
+
+    const [header, ...dataRows] = rows;
+    const columnIndex = findDateColumnIndex(header, dataRows);
+    if (columnIndex === -1) return null;
+
+    const parsedDates = dataRows
+      .map((row) => parseFlexibleDate(row[columnIndex]))
+      .filter((d): d is Date => d !== null);
+    if (!parsedDates.length) return null;
+
+    const times = parsedDates.map((d) => d.getTime());
+    return {
+      openingDate: toIsoDate(new Date(Math.min(...times))),
+      closingDate: toIsoDate(new Date(Math.max(...times))),
+    };
   }
 
   /** Step 4 (CSV only): submit the user-confirmed column mapping. */

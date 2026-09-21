@@ -35,6 +35,20 @@
             </mat-form-field>
           }
 
+           <div class="file-upload-container">
+            <input
+              type="file"
+              id="statementFile"
+              (change)="onFileSelected($event)"
+              [accept]="acceptTypes()"
+              class="file-input"
+            />
+            <label for="statementFile" class="file-label">
+              <mat-icon>cloud_upload</mat-icon>
+              <span>{{ selectedFile() ? selectedFile()?.name : 'Choose a file or drop it here (' + acceptTypes() + ')' }}</span>
+            </label>
+          </div>
+
           <!-- REQ-STMT-07: collected for every format. The statement is filed under the month
                its closing date falls in, so no separate month field is needed. -->
           <div class="date-range">
@@ -55,20 +69,6 @@
             <mat-label>Description (optional)</mat-label>
             <input matInput [ngModel]="description()" (ngModelChange)="description.set($event)" />
           </mat-form-field>
-
-          <div class="file-upload-container">
-            <input
-              type="file"
-              id="statementFile"
-              (change)="onFileSelected($event)"
-              [accept]="acceptTypes()"
-              class="file-input"
-            />
-            <label for="statementFile" class="file-label">
-              <mat-icon>cloud_upload</mat-icon>
-              <span>{{ selectedFile() ? selectedFile()?.name : 'Choose a file or drop it here (' + acceptTypes() + ')' }}</span>
-            </label>
-          </div>
         }
       </div>
     }

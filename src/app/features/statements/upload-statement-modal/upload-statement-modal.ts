@@ -149,8 +149,24 @@ export class UploadStatementModal implements OnDestroy {
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    if (file) {
-      this.selectedFile.set(file);
+    if (!file) {
+      return;
+    }
+    this.selectedFile.set(file);
+
+    // REQ-STMT-09: pre-fill the date range from the file itself instead of leaving it to the
+    // user to type — fields stay editable, and a failed/ambiguous detection just leaves them
+    // as they were rather than blocking the upload.
+    if (this.isCsv()) {
+      this.statementService.detectCsvDateRange(file).then((range) => {
+        // The file can change again before this resolves; a stale result for a since-replaced
+        // file must never overwrite whatever applies to the current selection.
+        if (!range || this.selectedFile() !== file) {
+          return;
+        }
+        this.openingDate.set(range.openingDate);
+        this.closingDate.set(range.closingDate);
+      });
     }
   }
 
