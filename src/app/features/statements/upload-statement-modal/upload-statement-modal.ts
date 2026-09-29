@@ -21,9 +21,9 @@ import {
 } from '../../../core/services/statement.service';
 import { BANK_INSTITUTIONS, BankInstitution } from '../../../core/constants/bank-institutions';
 import {
-  MappingConfirmationDialog,
-  MappingConfirmationDialogData,
-} from '../mapping-confirmation-dialog/mapping-confirmation-dialog';
+  CsvColMappingConfirmationDialog,
+  CsvColMappingConfirmationDialogData,
+} from '../csv-col-mapping-confirmation-dialog/csv-col-mapping-confirmation-dialog';
 import {
   DuplicateStatementDialog,
   DuplicateStatementDialogData,
@@ -333,9 +333,9 @@ export class UploadStatementModal implements OnDestroy {
   private handleStatusUpdate(res: JobStatusResponse): void {
     this.statusMessage.set(this.describeStatus(res.status));
 
-    if (res.status === 'PENDING_MAPPING_CONFIRMATION' && res.mappingProposal) {
+    if (res.status === 'PENDING_CSV_COL_MAPPING_CONFIRMATION' && res.mappingProposal) {
       this.pollSubscription?.unsubscribe();
-      this.openMappingConfirmation(res.mappingProposal, this.jobId!);
+      this.openCsvColMappingConfirmation(res.mappingProposal, this.jobId!);
       return;
     }
 
@@ -375,11 +375,11 @@ export class UploadStatementModal implements OnDestroy {
     }
   }
 
-  private openMappingConfirmation(proposal: JobStatusResponse['mappingProposal'], jobId: string): void {
+  private openCsvColMappingConfirmation(proposal: JobStatusResponse['mappingProposal'], jobId: string): void {
     if (!proposal) return;
 
-    const ref = this.matDialog.open<MappingConfirmationDialog, MappingConfirmationDialogData, Record<string, string> | undefined>(
-      MappingConfirmationDialog,
+    const ref = this.matDialog.open<CsvColMappingConfirmationDialog, CsvColMappingConfirmationDialogData, Record<string, string> | undefined>(
+      CsvColMappingConfirmationDialog,
       { data: { proposal }, disableClose: true }
     );
 
@@ -394,7 +394,7 @@ export class UploadStatementModal implements OnDestroy {
       }
 
       this.statusMessage.set('Confirming column mapping…');
-      this.statementService.confirmMapping(jobId, proposal.bankId, confirmedMapping).subscribe({
+      this.statementService.confirmCsvColMapping(jobId, proposal.bankId, confirmedMapping).subscribe({
         next: () => this.startPolling(jobId),
         error: (err) => {
           this.stage.set('error');

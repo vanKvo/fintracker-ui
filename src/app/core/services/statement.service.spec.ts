@@ -116,10 +116,10 @@ describe('StatementService', () => {
     req.flush(null);
   });
 
-  it('confirmMapping posts bank_id and confirmed_mapping in snake_case to match the pipeline API', () => {
-    service.confirmMapping('stmt-1', 'chase', { date: 'Posting Date', merchant: 'Description', amount: 'Amount' }).subscribe();
+  it('confirmCsvColMapping posts bank_id and confirmed_mapping in snake_case to match the pipeline API', () => {
+    service.confirmCsvColMapping('stmt-1', 'chase', { date: 'Posting Date', merchant: 'Description', amount: 'Amount' }).subscribe();
 
-    const req = httpMock.expectOne('/api/v1/pipeline/jobs/stmt-1/mapping-confirmation');
+    const req = httpMock.expectOne('/api/v1/pipeline/jobs/stmt-1/csv-col-mapping-confirmation');
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({
       bank_id: 'chase',
@@ -164,13 +164,13 @@ describe('StatementService', () => {
     expect(seen[0].duplicate.existingStatementId).toBe('old-stmt');
   });
 
-  it('polling still stops on PENDING_MAPPING_CONFIRMATION — the new status did not displace it', async () => {
+  it('polling still stops on PENDING_CSV_COL_MAPPING_CONFIRMATION — the new status did not displace it', async () => {
     let completed = false;
     service.pollJobStatus('stmt-1', 100_000).subscribe({ complete: () => (completed = true) });
     await flushPoll();
     httpMock.expectOne('/api/v1/pipeline/jobs/stmt-1').flush({
       jobId: 'stmt-1',
-      status: 'PENDING_MAPPING_CONFIRMATION',
+      status: 'PENDING_CSV_COL_MAPPING_CONFIRMATION',
       error: null,
     });
     expect(completed).toBe(true);

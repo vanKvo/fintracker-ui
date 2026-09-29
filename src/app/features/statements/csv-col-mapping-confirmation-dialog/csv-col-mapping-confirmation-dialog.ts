@@ -8,7 +8,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { ColumnMappingProposal } from '../../../core/services/statement.service';
 
-export interface MappingConfirmationDialogData {
+export interface CsvColMappingConfirmationDialogData {
   proposal: ColumnMappingProposal;
 }
 
@@ -30,15 +30,15 @@ const FIELD_LABELS: Record<CanonicalField, string> = {
  * with a confirmed mapping.
  */
 @Component({
-  selector: 'app-mapping-confirmation-dialog',
+  selector: 'app-csv-col-mapping-confirmation-dialog',
   standalone: true,
   imports: [CommonModule, MatDialogModule, MatButtonModule, MatFormFieldModule, MatSelectModule, MatIconModule, FormsModule],
-  templateUrl: './mapping-confirmation-dialog.html',
-  styleUrl: './mapping-confirmation-dialog.scss',
+  templateUrl: './csv-col-mapping-confirmation-dialog.html',
+  styleUrl: './csv-col-mapping-confirmation-dialog.scss',
 })
-export class MappingConfirmationDialog {
-  private dialogRef = inject(MatDialogRef<MappingConfirmationDialog, Record<string, string> | undefined>);
-  data = inject<MappingConfirmationDialogData>(MAT_DIALOG_DATA);
+export class CsvColMappingConfirmationDialog {
+  private dialogRef = inject(MatDialogRef<CsvColMappingConfirmationDialog, Record<string, string> | undefined>);
+  data = inject<CsvColMappingConfirmationDialogData>(MAT_DIALOG_DATA);
 
   readonly fields = CANONICAL_FIELDS;
   readonly fieldLabels = FIELD_LABELS;

@@ -1,17 +1,17 @@
 import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { MappingConfirmationDialog, MappingConfirmationDialogData } from './mapping-confirmation-dialog';
+import { CsvColMappingConfirmationDialog, CsvColMappingConfirmationDialogData } from './csv-col-mapping-confirmation-dialog';
 
-describe('MappingConfirmationDialog', () => {
-  function createComponent(data: MappingConfirmationDialogData, dialogRefSpy: { close: (r?: any) => void }) {
+describe('CsvColMappingConfirmationDialog', () => {
+  function createComponent(data: CsvColMappingConfirmationDialogData, dialogRefSpy: { close: (r?: any) => void }) {
     TestBed.configureTestingModule({
-      imports: [MappingConfirmationDialog],
+      imports: [CsvColMappingConfirmationDialog],
       providers: [
         { provide: MAT_DIALOG_DATA, useValue: data },
         { provide: MatDialogRef, useValue: dialogRefSpy },
       ],
     });
-    const fixture = TestBed.createComponent(MappingConfirmationDialog);
+    const fixture = TestBed.createComponent(CsvColMappingConfirmationDialog);
     fixture.detectChanges();
     return fixture.componentInstance;
   }

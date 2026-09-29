@@ -50,7 +50,7 @@ export interface DuplicateInfo {
 export type PipelineJobStatus =
   | 'STARTED'
   | 'PROCESSING'
-  | 'PENDING_MAPPING_CONFIRMATION'
+  | 'PENDING_CSV_COL_MAPPING_CONFIRMATION'
   // REQ-STMT-04: a likely duplicate was found after the file was read. Waits on the user, like
   // the mapping pause above — not a failure.
   | 'PENDING_DUPLICATE_RESOLUTION'
@@ -188,7 +188,7 @@ const TERMINAL_STATUSES: PipelineJobStatus[] = ['COMPLETED', 'PARTIALLY_COMPLETE
 
 /** Non-terminal statuses that stop the poller because they need an answer from the user. */
 const WAITING_STATUSES: PipelineJobStatus[] = [
-  'PENDING_MAPPING_CONFIRMATION',
+  'PENDING_CSV_COL_MAPPING_CONFIRMATION',
   'PENDING_DUPLICATE_RESOLUTION',
 ];
 
@@ -330,8 +330,8 @@ export class StatementService {
   }
 
   /** Step 4 (CSV only): submit the user-confirmed column mapping. */
-  confirmMapping(jobId: string, bankId: string, confirmedMapping: Record<string, string>): Observable<void> {
-    return this.http.post<void>(`${this.pipelineApiUrl}/jobs/${jobId}/mapping-confirmation`, {
+  confirmCsvColMapping(jobId: string, bankId: string, confirmedMapping: Record<string, string>): Observable<void> {
+    return this.http.post<void>(`${this.pipelineApiUrl}/jobs/${jobId}/csv-col-mapping-confirmation`, {
       bank_id: bankId,
       confirmed_mapping: confirmedMapping
     });
