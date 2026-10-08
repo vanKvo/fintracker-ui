@@ -41,9 +41,18 @@
              (input)="updateAmount($any($event.target).value)">
     </mat-form-field>
 
-    <mat-radio-group class="type-group" [ngModel]="type()" (ngModelChange)="type.set($event)">
-      <mat-radio-button value="PURCHASE">Purchase (expense)</mat-radio-button>
-      <mat-radio-button value="CREDIT">Credit (income)</mat-radio-button>
+    <mat-form-field appearance="outline" class="form-field" subscriptSizing="dynamic">
+      <mat-label>Type</mat-label>
+      <mat-select [ngModel]="type()" (ngModelChange)="selectType($event)">
+        @for (option of typeOptions; track option.value) {
+          <mat-option [value]="option.value">{{option.label}}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-radio-group class="type-group" [ngModel]="direction()" (ngModelChange)="direction.set($event)">
+      <mat-radio-button value="DEBIT">Money out</mat-radio-button>
+      <mat-radio-button value="CREDIT">Money in</mat-radio-button>
     </mat-radio-group>
   </div>
 </mat-dialog-content>

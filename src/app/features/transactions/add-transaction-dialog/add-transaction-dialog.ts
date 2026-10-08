@@ -10,6 +10,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatRadioModule } from '@angular/material/radio';
 import { Account } from '../../../core/services/account.service';
+import { TransactionDirection, TransactionType } from '../../../core/services/transaction.service';
 
 export interface AddTransactionDialogData {
   accounts: Account[];
@@ -26,8 +27,16 @@ export interface CreateTransactionResult {
   merchant: string;
   category: string;
   txDate?: string;
-  type: 'PURCHASE' | 'CREDIT';
+  type: TransactionType;
+  direction: TransactionDirection;
 }
+
+// TXT-01: types with a fixed direction pre-select it; TRANSFER and ADJUSTMENT can go either way.
+const DIRECTION_FOR_TYPE: Partial<Record<TransactionType, TransactionDirection>> = {
+  EXPENSE: 'DEBIT',
+  INCOME: 'CREDIT',
+  REFUND: 'CREDIT',
+};
 
 @Component({
   selector: 'app-add-transaction-dialog',
@@ -57,7 +66,16 @@ export class AddTransactionDialog {
   category = signal<string | null>(null);
   merchant = signal('');
   amount = signal<number | null>(null);
-  type = signal<'PURCHASE' | 'CREDIT'>('PURCHASE');
+  type = signal<TransactionType>('EXPENSE');
+  direction = signal<TransactionDirection>('DEBIT');
+
+  readonly typeOptions: { value: TransactionType; label: string }[] = [
+    { value: 'EXPENSE', label: 'Expense' },
+    { value: 'INCOME', label: 'Income' },
+    { value: 'REFUND', label: 'Refund' },
+    { value: 'TRANSFER', label: 'Transfer' },
+    { value: 'ADJUSTMENT', label: 'Adjustment' },
+  ];
 
   canSubmit = computed(() =>
     this.date() !== null
@@ -75,6 +93,12 @@ export class AddTransactionDialog {
     this.categories = data.categories;
   }
 
+  selectType(type: TransactionType): void {
+    this.type.set(type);
+    const direction = DIRECTION_FOR_TYPE[type];
+    if (direction) this.direction.set(direction);
+  }
+
   updateAmount(rawValue: string): void {
     this.amount.set(rawValue === '' ? null : Number(rawValue));
   }
@@ -86,10 +110,10 @@ export class AddTransactionDialog {
   confirm(): void {
     if (!this.canSubmit()) return;
 
-    // The user always enters a positive number; sign is derived from the selected Type so they
-    // never have to think about "expenses are negative" — same UX simplification the inline
+    // The user always enters a positive number; sign is derived from the direction so they
+    // never have to think about "money out is negative" — same UX simplification the inline
     // amount editor doesn't have the luxury of, since it edits an already-signed value.
-    const signedAmount = this.type() === 'PURCHASE'
+    const signedAmount = this.direction() === 'DEBIT'
       ? -Math.abs(this.amount() as number)
       : Math.abs(this.amount() as number);
 
@@ -103,6 +127,7 @@ export class AddTransactionDialog {
       merchant: this.merchant().trim(),
       category: this.category() as string,
       type: this.type(),
+      direction: this.direction(),
       ...(isToday ? {} : { txDate: this.toLocalDateString(selectedDate) })
     };
     this.dialogRef.close(result);

@@ -14,6 +14,10 @@ export interface SplitItemPayload {
   category: string;
 }
 
+// TXT-01: the Ledger's five transaction types, and money out (DEBIT) / in (CREDIT).
+export type TransactionType = 'EXPENSE' | 'INCOME' | 'REFUND' | 'TRANSFER' | 'ADJUSTMENT';
+export type TransactionDirection = 'DEBIT' | 'CREDIT';
+
 // REQ-2.3.1 "Manual Row Insertion" — mirrors the Ledger's ManualTransactionRequest. txDate is
 // omitted (not sent as null) to defer to the backend's "defaults to today" behavior.
 export interface CreateTransactionPayload {
@@ -22,7 +26,8 @@ export interface CreateTransactionPayload {
   merchant: string;
   category: string;
   txDate?: string;
-  type: 'PURCHASE' | 'CREDIT';
+  type: TransactionType;
+  direction: TransactionDirection;
 }
 
 @Injectable({
