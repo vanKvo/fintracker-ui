@@ -54,6 +54,22 @@ describe('AddTransactionDialog', () => {
     expect(component.direction()).toBe(direction);
   });
 
+  it.each(['EXPENSE', 'INCOME', 'REFUND'] as const)('locks the direction for %s', type => {
+    const component = createComponent();
+
+    component.selectType(type);
+
+    expect(component.directionLocked()).toBe(true);
+  });
+
+  it.each(['TRANSFER', 'ADJUSTMENT'] as const)('lets the user choose the direction for %s', type => {
+    const component = createComponent();
+
+    component.selectType(type);
+
+    expect(component.directionLocked()).toBe(false);
+  });
+
   it('keeps the chosen direction for TRANSFER and ADJUSTMENT, which can go either way', () => {
     const component = createComponent();
     component.direction.set('CREDIT');
