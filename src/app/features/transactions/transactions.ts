@@ -22,7 +22,9 @@ import { TransactionDetailPanel } from './transaction-detail-panel/transaction-d
 import { SplitTransactionDialog, SplitResult } from './split-transaction-dialog/split-transaction-dialog';
 // import { AddTagDialog } from './add-tag-dialog/add-tag-dialog'; // temporarily disabled — see openAddTagDialog() below
 import { AddTransactionDialog, CreateTransactionResult } from './add-transaction-dialog/add-transaction-dialog';
-import { TransactionService, UpdateTransactionPayload } from '../../core/services/transaction.service';
+import {
+  TransactionDirection, TransactionService, TransactionType, UpdateTransactionPayload
+} from '../../core/services/transaction.service';
 import { AccountService, Account } from '../../core/services/account.service';
 import { CategoryService } from '../../core/services/category.service';
 import { catchError, map } from 'rxjs/operators';
@@ -44,6 +46,11 @@ export interface Transaction {
   sourceStatementId?: string;
   isExcluded: boolean;
   isManual: boolean;
+  type: TransactionType;
+  direction: TransactionDirection;
+  currency: string;
+  isRecurring: boolean | null;
+  linkedTransactionId: string | null;
 }
 
 @Component({

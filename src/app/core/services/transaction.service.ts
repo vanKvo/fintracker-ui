@@ -4,19 +4,28 @@ import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AccountService } from './account.service';
 
+// TXT-01: the Ledger's five transaction types, and money out (DEBIT) / in (CREDIT).
+export type TransactionType = 'EXPENSE' | 'INCOME' | 'REFUND' | 'TRANSFER' | 'ADJUSTMENT';
+export type TransactionDirection = 'DEBIT' | 'CREDIT';
+
 export interface UpdateTransactionPayload {
   category?: string;
   amount?: number;
+  type?: TransactionType;
+  direction?: TransactionDirection;
+  isRecurring?: boolean;
+  linkedTransactionId?: string;
+}
+
+export interface TransactionFilters {
+  type?: TransactionType;
+  direction?: TransactionDirection;
 }
 
 export interface SplitItemPayload {
   amount: number;
   category: string;
 }
-
-// TXT-01: the Ledger's five transaction types, and money out (DEBIT) / in (CREDIT).
-export type TransactionType = 'EXPENSE' | 'INCOME' | 'REFUND' | 'TRANSFER' | 'ADJUSTMENT';
-export type TransactionDirection = 'DEBIT' | 'CREDIT';
 
 // REQ-2.3.1 "Manual Row Insertion" — mirrors the Ledger's ManualTransactionRequest. txDate is
 // omitted (not sent as null) to defer to the backend's "defaults to today" behavior.
@@ -28,6 +37,9 @@ export interface CreateTransactionPayload {
   txDate?: string;
   type: TransactionType;
   direction: TransactionDirection;
+  currency?: string;
+  isRecurring?: boolean;
+  linkedTransactionId?: string;
 }
 
 @Injectable({
@@ -38,9 +50,13 @@ export class TransactionService {
 
   constructor(private http: HttpClient, private accountService: AccountService) { }
 
-  getTransactions(): Observable<any[]> {
+  getTransactions(filters: TransactionFilters = {}): Observable<any[]> {
+    let params = new HttpParams();
+    if (filters.type) params = params.set('type', filters.type);
+    if (filters.direction) params = params.set('direction', filters.direction);
+
     return combineLatest([
-      this.http.get<any[]>(this.apiUrl),
+      this.http.get<any[]>(this.apiUrl, { params }),
       this.accountService.getAccounts()
     ]).pipe(
       map(([transactions, accounts]) => {
@@ -60,7 +76,12 @@ export class TransactionService {
           tags: t.tags || [],
           sourceStatementId: t.statementId,
           isExcluded: !!t.isExcluded,
-          isManual: !!t.isManual
+          isManual: !!t.isManual,
+          type: t.type,
+          direction: t.direction,
+          currency: t.currency,
+          isRecurring: t.isRecurring ?? null,
+          linkedTransactionId: t.linkedTransactionId ?? null
         }));
       })
     );

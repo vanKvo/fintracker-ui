@@ -31,7 +31,8 @@ export interface CreateTransactionResult {
   direction: TransactionDirection;
 }
 
-// TXT-01: types with a fixed direction pre-select it; TRANSFER and ADJUSTMENT can go either way.
+// TXT-01: EXPENSE is always money out; INCOME and REFUND always money in (the Ledger rejects
+// anything else). TRANSFER and ADJUSTMENT can go either way.
 const DIRECTION_FOR_TYPE: Partial<Record<TransactionType, TransactionDirection>> = {
   EXPENSE: 'DEBIT',
   INCOME: 'CREDIT',
@@ -68,6 +69,7 @@ export class AddTransactionDialog {
   amount = signal<number | null>(null);
   type = signal<TransactionType>('EXPENSE');
   direction = signal<TransactionDirection>('DEBIT');
+  directionLocked = computed(() => DIRECTION_FOR_TYPE[this.type()] !== undefined);
 
   readonly typeOptions: { value: TransactionType; label: string }[] = [
     { value: 'EXPENSE', label: 'Expense' },

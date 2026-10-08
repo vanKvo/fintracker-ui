@@ -50,7 +50,8 @@
       </mat-select>
     </mat-form-field>
 
-    <mat-radio-group class="type-group" [ngModel]="direction()" (ngModelChange)="direction.set($event)">
+    <mat-radio-group class="type-group" [ngModel]="direction()" (ngModelChange)="direction.set($event)"
+                     [disabled]="directionLocked()">
       <mat-radio-button value="DEBIT">Money out</mat-radio-button>
       <mat-radio-button value="CREDIT">Money in</mat-radio-button>
     </mat-radio-group>
